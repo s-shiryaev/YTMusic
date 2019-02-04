@@ -124,15 +124,24 @@ public class MainActivity extends AppCompatActivity
             Fragment fragment;
             if (getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE")==null) {
                 fragment = new DownloadsFragment();
+                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
+                transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
+                transaction.commit();
+                getSupportFragmentManager().executePendingTransactions();
 
             } else {
                 fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
+                if (fragment.isVisible()){
+                    ((DownloadsFragment)fragment).RefreshRecyclerView();
+                }else{
+                    FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                    transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
+                    transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
+                    transaction.commit();
+                    getSupportFragmentManager().executePendingTransactions();
+                }
             }
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
-            transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
-            transaction.commit();
-            getSupportFragmentManager().executePendingTransactions();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

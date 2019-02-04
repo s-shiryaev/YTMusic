@@ -16,7 +16,7 @@ public class DownloadsItems {
     /**
      * An array of sample (dummy) items.
      */
-    public static final List<DownloadsItem> ITEMS = new ArrayList<DownloadsItem>();
+    private static final List<DownloadsItem> ITEMS = new ArrayList<DownloadsItem>();
 
 
 
@@ -24,27 +24,30 @@ public class DownloadsItems {
         ITEMS.add(item);
     }
 
-    public static DownloadsItem createDummyItem(int position, String title, String downloadId ) {
-        return new DownloadsItem(String.valueOf(position), title, downloadId);
+    public static DownloadsItem createDummyItem(String title, String downloadId ) {
+        return new DownloadsItem(title, downloadId);
     }
 
+    public static List<DownloadsItem> getITEMS() {
+        return ITEMS;
+    }
+    public static DownloadsItem getITEMbyId(int id){return ITEMS.get(id);}
 
     /**
      * A dummy item representing a piece of content.
      */
     public static class DownloadsItem {
-        public final String id;
         private String title;
         private String downloadId;
 
-        public DownloadsItem(String id, String title, String downloadId) {
-            this.id = id;
+        public DownloadsItem(String title, String downloadId) {
             this.title = title;
             this.downloadId = downloadId;
         }
 
         public String getTitle() {return this.title;}
         public String getDownloadId() {return this.downloadId;}
+        public void setDownloadId(String id){this.downloadId=id;}
 
 
         @Override

@@ -1,17 +1,34 @@
 package ru.mrsmile2114.ytmusic;
 
+import android.Manifest;
+import android.app.DownloadManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
+import java.util.List;
+
+import at.huber.youtubeExtractor.VideoMeta;
+import at.huber.youtubeExtractor.YouTubeExtractor;
+import at.huber.youtubeExtractor.YtFile;
+import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
 import ru.mrsmile2114.ytmusic.dummy.PlaylistItems;
 import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
 
@@ -116,20 +133,102 @@ public class PlaylistItemsFragment extends Fragment {
     public final View.OnClickListener FabList = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Snackbar.make(v, "ALMOST DONE!", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
+            if (haveStoragePermission()) {
+                List<PlaylistItem> CHECKEDITEMS = PlaylistItems.getCheckedItems();
+                for (int i = 0; i < CHECKEDITEMS.size(); i++) {
+                    new YouTubeExtractor(getActivity()) {
+                        @Override
+                        protected void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta vMeta) {
+                            if (ytFiles != null) {
+                                int itag = 140;
+                                String downloadUrl = ytFiles.get(itag).getUrl();
+                                YtFile ytFile = ytFiles.get(itag);
+                                YtFragmentedVideo frVideo = new YtFragmentedVideo();
+                                frVideo.audioFile = ytFile;
+                                String downloadIds = "";
+                                String filename;
+                                String videoTitle = vMeta.getTitle();
+                                if (videoTitle.length() > 55) {
+                                    filename = videoTitle.substring(0, 55);
+                                } else {
+                                    filename = videoTitle;
+                                }
+                                filename = filename.replaceAll("[\\\\><\"|*?%:#/]", "");
+                                filename += "." + frVideo.audioFile.getFormat().getExt();
+                                downloadIds+=downloadFromUrl(downloadUrl ,videoTitle, filename,false);
+                                DownloadsItems.addItem(DownloadsItems.createDummyItem(videoTitle, downloadIds));
+                                Log.w("DEBUG:", downloadIds);
+                                Fragment fragment;
+                                if (getActivity().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE")==null) {
+                                    fragment = new DownloadsFragment();
+                                    FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+                                    transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
+                                    transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
+                                    transaction.commit();
+                                } else {
+                                    fragment = getActivity().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
+                                    if (fragment.isVisible()) {
+                                        ((DownloadsFragment) fragment).RefreshRecyclerView();
+                                    } else {
+                                        FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+                                        transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
+                                        transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
+                                        transaction.commit();
+                                    }
+                                }
+                            }
+                        }
+
+                    }.extract(CHECKEDITEMS.get(i).getUrl(), true, true);
+                }
+            }
         }
     };
+
+    private long downloadFromUrl(String youtubeDlUrl, String downloadTitle, String fileName, boolean hide) {
+        Uri uri = Uri.parse(youtubeDlUrl);
+        DownloadManager.Request request = new DownloadManager.Request(uri);
+        request.setTitle(downloadTitle);
+        if (hide) {
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+            request.setVisibleInDownloadsUi(false);
+        } else
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS+"/YTMusic", fileName);
+
+        DownloadManager manager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+        return manager.enqueue(request);
+    }
 
     public final CheckBox.OnCheckedChangeListener CheckBoxListener = new CheckBox.OnCheckedChangeListener(){
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 recyclerViewAdapter.setAllChecked(isChecked);
-                if (isChecked) {
-                   System.out.println("CLICK CHECK 0->*");
-               } else {
-                   System.out.println("CLICK CHECK *->0");
-               }
             }
         };
+
+    public  boolean haveStoragePermission() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(getActivity(),Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.e("Permission error","You have permission");
+                return true;
+            } else {
+                Log.e("Permission error","You have asked for permission");
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                return false;
+            }
+        }
+        else {
+            Log.e("Permission error","You already have the permission");
+            return true;
+        }
+    }
+
+    private class YtFragmentedVideo {
+        int height;
+        YtFile audioFile;
+        YtFile videoFile;
+    }
 }

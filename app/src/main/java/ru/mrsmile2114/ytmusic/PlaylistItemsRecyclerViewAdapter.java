@@ -58,7 +58,6 @@ public class PlaylistItemsRecyclerViewAdapter extends RecyclerView.Adapter<Playl
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mValues.get(position).setChecked(isChecked);
-                //System.out.println(position+" CHANGED ON TRUE");//TODO:DELETE ON RELEASE
             }
         });
         mCheckboxList.add(holder.mCheckBox);

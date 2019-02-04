@@ -22,6 +22,7 @@ import ru.mrsmile2114.ytmusic.dummy.DownloadsItems.DownloadsItem;
 public class DownloadsFragment extends Fragment {
 
         private OnListFragmentInteractionListener mListener;
+        private MyDownloadsRecyclerViewAdapter mAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -56,10 +57,16 @@ public class DownloadsFragment extends Fragment {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView.setAdapter(new MyDownloadsRecyclerViewAdapter(DownloadsItems.ITEMS, mListener));
+            mAdapter = new MyDownloadsRecyclerViewAdapter(DownloadsItems.getITEMS(), mListener);
+            recyclerView.setAdapter(mAdapter);
         }
         ((MainActivity)getActivity()).setTitle("Active downloads");
         return view;
+    }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mAdapter = null;
     }
 
 
@@ -78,6 +85,9 @@ public class DownloadsFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+    public void RefreshRecyclerView(){
+        mAdapter.notifyDataSetChanged();
     }
 
     /**
