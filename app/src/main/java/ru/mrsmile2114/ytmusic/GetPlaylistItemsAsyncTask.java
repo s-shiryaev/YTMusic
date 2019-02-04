@@ -77,7 +77,7 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
         }
         PlaylistItems.clearItems();//delete data
         for(int i=0;i<playlistListResponse.getItems().size();i++){
-            PlaylistItems.addItem(PlaylistItems.createDummyItem(i,
+            PlaylistItems.addItem(PlaylistItems.createDummyItem(
                     playlistListResponse.getItems().get(i).getSnippet().getTitle(),
                     playlistListResponse.getItems().get(i).getContentDetails().getVideoId(),
                     playlistListResponse.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl()));

@@ -127,15 +127,6 @@ public class DownloadStartFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    private void FillDownloadContent(PlaylistItemListResponse response) {
-
-        for(int i=0;i<response.getItems().size();i++){
-            PlaylistItems.addItem(PlaylistItems .createDummyItem(i,
-                    response.getItems().get(i).getSnippet().getTitle(),
-                    response.getItems().get(i).getContentDetails().getVideoId(),
-                    response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl()));
-        }
-    }
 
     public final View.OnClickListener FabList = new View.OnClickListener() {
         @Override

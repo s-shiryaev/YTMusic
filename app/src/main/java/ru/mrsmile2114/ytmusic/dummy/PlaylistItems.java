@@ -11,17 +11,13 @@ public class PlaylistItems {
      */
     private static final List<PlaylistItem> ITEMS = new ArrayList<PlaylistItem>();
 
-    /**
-     * A map of sample (dummy) items, by ID.
-     */
-
 
     public static void addItem(PlaylistItem item) {
         ITEMS.add(item);
     }
 
-    public static PlaylistItem createDummyItem(int position, String title, String url, String thumbnail) {//!!!!
-        return new PlaylistItem(String.valueOf(position), title, url, thumbnail,false);
+    public static PlaylistItem createDummyItem(String title, String url, String thumbnail) {//!!!!
+        return new PlaylistItem(title, url, thumbnail,false);
     }
 
     public static List<PlaylistItem> getITEMS() {
@@ -46,14 +42,12 @@ public class PlaylistItems {
      * A dummy item representing a piece of content.
      */
     public static class PlaylistItem {
-        public final String id;
         private String title;
         private String url;
         private String thumbnail;
         private boolean isChecked;
 
-        public PlaylistItem(String id, String title, String url, String thumbnail, boolean isChecked) {
-            this.id = id;
+        public PlaylistItem(String title, String url, String thumbnail, boolean isChecked) {
             this.title = title;
             this.url = url;
             this.thumbnail=thumbnail;
