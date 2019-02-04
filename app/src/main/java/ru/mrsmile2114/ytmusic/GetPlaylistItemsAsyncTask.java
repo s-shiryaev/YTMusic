@@ -84,15 +84,6 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
         }
 
         progressDialogRef.get().dismiss();
-        Fragment fragment;
-        if (activityReference.get().getSupportFragmentManager().findFragmentByTag("FRAGMENT_PLAYLIST_ITEMS")==null) {
-            fragment = new PlaylistItemsFragment();
-        } else {
-            fragment = activityReference.get().getSupportFragmentManager().findFragmentByTag("FRAGMENT_PLAYLIST_ITEMS");
-        }
-        FragmentTransaction transaction = activityReference.get().getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.container, fragment, "FRAGMENT_PLAYLIST_ITEMS");
-        transaction.addToBackStack("FRAGMENT_PLAYLIST_ITEMS");
-        transaction.commit();
+        activityReference.get().GoToFragment(PlaylistItemsFragment.class);
     }
 }

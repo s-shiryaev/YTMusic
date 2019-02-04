@@ -115,6 +115,10 @@ public class PlaylistItemsFragment extends Fragment {
         mListener = null;
     }
 
+    public void RefreshRecyclerView() {
+        recyclerViewAdapter.notifyDataSetChanged();
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -159,23 +163,7 @@ public class PlaylistItemsFragment extends Fragment {
                                 DownloadsItems.addItem(DownloadsItems.createDummyItem(videoTitle, downloadIds));
                                 Log.w("DEBUG:", downloadIds);
                                 Fragment fragment;
-                                if (getActivity().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE")==null) {
-                                    fragment = new DownloadsFragment();
-                                    FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
-                                    transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
-                                    transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
-                                    transaction.commit();
-                                } else {
-                                    fragment = getActivity().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
-                                    if (fragment.isVisible()) {
-                                        ((DownloadsFragment) fragment).RefreshRecyclerView();
-                                    } else {
-                                        FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
-                                        transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
-                                        transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
-                                        transaction.commit();
-                                    }
-                                }
+                                ((MainActivity)getActivity()).GoToFragment(DownloadsFragment.class);
                             }
                         }
 

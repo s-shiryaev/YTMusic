@@ -51,17 +51,7 @@ public class MainActivity extends AppCompatActivity
 
         navigationView.setCheckedItem(R.id.nav_download);
         fab.setImageResource(R.drawable.ic_menu_search);
-        Fragment fragment;
-        if (getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START")==null) { //no memory leak :D
-            fragment = new DownloadStartFragment();
-        } else {
-            fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START");
-        }
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOAD_START");
-        transaction.addToBackStack("FRAGMENT_DOWNLOAD_START");
-        transaction.commit();
-        fab.show();
+        GoToFragment(DownloadStartFragment.class);//go to start fragment
     }
 
     @Override
@@ -94,7 +84,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.action_settings) {
             return true;
         } else if (id == R.id.action_check_box){
-            System.out.println("OPT SELECTED");
+            //System.out.println("OPT SELECTED");
             return true;
         }
 
@@ -108,42 +98,10 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         Class fragmentClass = null;
         if (id == R.id.nav_download) {
-            Fragment fragment;
-            if (getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START")==null) {
-                fragment = new DownloadStartFragment();
-
-            } else {
-                fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START");
-            }
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOAD_START");
-            transaction.addToBackStack("FRAGMENT_DOWNLOAD_START");
-            transaction.commit();
-            getSupportFragmentManager().executePendingTransactions();
+            GoToFragment(DownloadStartFragment.class);
         } else if (id == R.id.nav_manage) {
-            Fragment fragment;
-            if (getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE")==null) {
-                fragment = new DownloadsFragment();
-                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
-                transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
-                transaction.commit();
-                getSupportFragmentManager().executePendingTransactions();
-
-            } else {
-                fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
-                if (fragment.isVisible()){
-                    ((DownloadsFragment)fragment).RefreshRecyclerView();
-                }else{
-                    FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-                    transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
-                    transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
-                    transaction.commit();
-                    getSupportFragmentManager().executePendingTransactions();
-                }
-            }
+            GoToFragment(DownloadsFragment.class);
         }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -166,6 +124,51 @@ public class MainActivity extends AppCompatActivity
             System.out.println("TEST");
         }
     };
+
+    public void GoToFragment(Class fragmentclass){//method of transition to the desired fragment
+        Fragment fragment;
+        if (fragmentclass==DownloadStartFragment.class){//for DownloadStartFragment
+            fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START");
+            if (fragment==null) {
+                fragment = new DownloadStartFragment();
+            }
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOAD_START");
+            transaction.addToBackStack("FRAGMENT_DOWNLOAD_START");
+            transaction.commit();
+            getSupportFragmentManager().executePendingTransactions();
+            navigationView.setCheckedItem(R.id.nav_download);
+        } else if (fragmentclass==DownloadsFragment.class){//for DownloadsFragment
+            fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
+            if (fragment==null){
+                fragment = new DownloadsFragment();
+            }
+            if (fragment.isVisible()){
+                ((DownloadsFragment)fragment).RefreshRecyclerView();
+            }else{
+                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
+                transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
+                transaction.commit();
+                getSupportFragmentManager().executePendingTransactions();
+            }
+            navigationView.setCheckedItem(R.id.nav_manage);
+        } else if (fragmentclass==PlaylistItemsFragment.class){//for PlaylistItemsFragment
+            fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_PLAYLIST_ITEMS");
+            if (fragment==null){
+                fragment = new PlaylistItemsFragment();
+            }
+            if (fragment.isVisible()){
+                ((PlaylistItemsFragment)fragment).RefreshRecyclerView();
+            }else{
+                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                transaction.replace(R.id.container, fragment, "FRAGMENT_PLAYLIST_ITEMS");
+                transaction.addToBackStack("FRAGMENT_PLAYLIST_ITEMS");
+                transaction.commit();
+                getSupportFragmentManager().executePendingTransactions();
+            }
+        }
+    }
 
     public void SetMainFabListener(View.OnClickListener listener){ fab.setOnClickListener(listener); }
     public void SetMainFabImage(int imageResourse){ fab.setImageResource(imageResourse); }
