@@ -12,7 +12,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import ru.mrsmile2114.ytmusic.PlaylistItemsFragment.OnListFragmentInteractionListener;
-import ru.mrsmile2114.ytmusic.PlaylistItems.PlaylistItem;
+import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
 
 import java.util.ArrayList;
 import java.util.List;

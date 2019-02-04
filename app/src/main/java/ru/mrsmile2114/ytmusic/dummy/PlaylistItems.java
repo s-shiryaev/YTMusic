@@ -1,4 +1,4 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.dummy;
 
 import java.util.ArrayList;
 import java.util.List;

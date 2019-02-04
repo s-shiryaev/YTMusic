@@ -15,12 +15,15 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 
-import ru.mrsmile2114.ytmusic.PlaylistItems.PlaylistItem;
+import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
+import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, PlaylistItemsFragment.OnListFragmentInteractionListener, DownloadStart.OnFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        PlaylistItemsFragment.OnListFragmentInteractionListener,
+        DownloadStartFragment.OnFragmentInteractionListener,
+        DownloadsFragment.OnListFragmentInteractionListener {
 
     private FloatingActionButton fab;
     private NavigationView navigationView;
@@ -50,7 +53,7 @@ public class MainActivity extends AppCompatActivity
         fab.setImageResource(R.drawable.ic_menu_search);
         Fragment fragment;
         if (getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START")==null) { //no memory leak :D
-            fragment = new DownloadStart();
+            fragment = new DownloadStartFragment();
         } else {
             fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START");
         }
@@ -76,21 +79,7 @@ public class MainActivity extends AppCompatActivity
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         mymenu=menu;
-        //selectAllCheckBox.setVisibility(View.INVISIBLE);
-        //selectAllCheckBox.setEnabled(false);
         mymenu.findItem(R.id.action_check_box).setVisible(false);
-        //((CheckBox)mymenu.findItem(R.id.action_check_box).getActionView()).setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
-        //    @Override
-        //    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        //        if (isChecked) {
-        //           System.out.println("CLICK CHECK *->0");
-         //           //System.out.println(position+" CHANGED ON TRUE");//TODO:DELETE ON RELEASE
-         //       } else {
-         //           System.out.println("CLICK CHECK 0->*");
-         //           //System.out.println(position+"CHANGED ON False");//TODO:DELETE ON RELEASE
-        //        }
-        //    }
-        //});
         return true;
     }
 
@@ -120,13 +109,11 @@ public class MainActivity extends AppCompatActivity
         Class fragmentClass = null;
         if (id == R.id.nav_download) {
             Fragment fragment;
-            if (getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START")==null) { //no memory leak :D
-                fragment = new DownloadStart();
-                //System.out.println("NEW FRAGMENT START");
+            if (getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START")==null) {
+                fragment = new DownloadStartFragment();
 
             } else {
                 fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START");
-                //System.out.println("FRAGMENT FIND START");
             }
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOAD_START");
@@ -135,17 +122,15 @@ public class MainActivity extends AppCompatActivity
             getSupportFragmentManager().executePendingTransactions();
         } else if (id == R.id.nav_manage) {
             Fragment fragment;
-            if (getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_MANAGE")==null) { //no memory leak :D
-                fragment = new PlaylistItemsFragment();
-                //System.out.println("NEW FRAGMENT DOWN");
+            if (getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE")==null) {
+                fragment = new DownloadsFragment();
 
             } else {
-                //System.out.println("FRAGMENT FIND DOWN");
-                fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_MANAGE");
+                fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
             }
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOAD_MANAGE");
-            transaction.addToBackStack("FRAGMENT_DOWNLOAD_MANAGE");
+            transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
+            transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
             transaction.commit();
             getSupportFragmentManager().executePendingTransactions();
         }
@@ -190,5 +175,10 @@ public class MainActivity extends AppCompatActivity
 
     public void SetCheckedItem(int id){
         navigationView.setCheckedItem(id);
+    }
+
+    @Override
+    public void onListFragmentInteraction(DownloadsItems.DownloadsItem item) {
+
     }
 }

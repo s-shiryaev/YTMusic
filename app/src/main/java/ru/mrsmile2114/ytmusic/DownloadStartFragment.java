@@ -5,7 +5,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -19,16 +18,18 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 
+import ru.mrsmile2114.ytmusic.dummy.PlaylistItems;
+
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link DownloadStart.OnFragmentInteractionListener} interface
+ * {@link DownloadStartFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link DownloadStart#newInstance} factory method to
+ * Use the {@link DownloadStartFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class DownloadStart extends Fragment {
+public class DownloadStartFragment extends Fragment {
 
     private EditText editText;
     private View mView;
@@ -41,13 +42,13 @@ public class DownloadStart extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    public DownloadStart() {
+    public DownloadStartFragment() {
         // Required empty public constructor
     }
 
 
-    public static DownloadStart newInstance() {//add parameter if need
-        DownloadStart fragment = new DownloadStart();
+    public static DownloadStartFragment newInstance() {//add parameter if need
+        DownloadStartFragment fragment = new DownloadStartFragment();
         return fragment;
     }
 
@@ -129,8 +130,7 @@ public class DownloadStart extends Fragment {
     private void FillDownloadContent(PlaylistItemListResponse response) {
 
         for(int i=0;i<response.getItems().size();i++){
-            //System.out.println("FILL ITEM "+i);
-            PlaylistItems.addItem(PlaylistItems.createDummyItem(i,
+            PlaylistItems.addItem(PlaylistItems .createDummyItem(i,
                     response.getItems().get(i).getSnippet().getTitle(),
                     response.getItems().get(i).getContentDetails().getVideoId(),
                     response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl()));
@@ -145,7 +145,8 @@ public class DownloadStart extends Fragment {
                 if (s.contains("www.youtube.com/playlist?list=")){
                     s=s.copyValueOf(s.toCharArray(),s.indexOf("=")+1,s.length()-s.indexOf("=")-1);//get playlist id
                     //STARTING REQUEST TO API
-                    task = new GetPlaylistItemsAsyncTask(mYoutubeDataApi,progressDialog,(MainActivity)getActivity()).execute(s);//no memory leak
+                    task = new GetPlaylistItemsAsyncTask(mYoutubeDataApi,progressDialog,(MainActivity)getActivity());
+                    task.execute(s);
                 }
             }else {
                 Snackbar.make(mView, "Please insert correct link to the playlist/video!", Snackbar.LENGTH_LONG)

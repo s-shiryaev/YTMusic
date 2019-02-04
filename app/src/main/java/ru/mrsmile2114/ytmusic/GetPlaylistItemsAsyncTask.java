@@ -12,6 +12,8 @@ import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
+import ru.mrsmile2114.ytmusic.dummy.PlaylistItems;
+
 public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistItemListResponse> {
     private static final String YOUTUBE_PLAYLIST_PART = "snippet,contentDetails";
     private static final String YOUTUBE_PLAYLIST_FIELDS = "items(id,snippet(title,thumbnails),contentDetails(videoId))";
@@ -83,15 +85,14 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
 
         progressDialogRef.get().dismiss();
         Fragment fragment;
-        if (activityReference.get().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_MANAGE")==null) {
+        if (activityReference.get().getSupportFragmentManager().findFragmentByTag("FRAGMENT_PLAYLIST_ITEMS")==null) {
             fragment = new PlaylistItemsFragment();
         } else {
-            fragment = activityReference.get().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_MANAGE");
+            fragment = activityReference.get().getSupportFragmentManager().findFragmentByTag("FRAGMENT_PLAYLIST_ITEMS");
         }
         FragmentTransaction transaction = activityReference.get().getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOAD_MANAGE");
-        transaction.addToBackStack("FRAGMENT_DOWNLOAD_MANAGE");
+        transaction.replace(R.id.container, fragment, "FRAGMENT_PLAYLIST_ITEMS");
+        transaction.addToBackStack("FRAGMENT_PLAYLIST_ITEMS");
         transaction.commit();
-        activityReference.get().SetCheckedItem(R.id.nav_manage);//check nav item//TODO: DELETE
     }
 }
