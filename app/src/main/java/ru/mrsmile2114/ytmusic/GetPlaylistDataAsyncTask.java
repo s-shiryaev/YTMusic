@@ -7,15 +7,16 @@ import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.PlaylistListResponse;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
 public class GetPlaylistDataAsyncTask extends AsyncTask<String[], Void, PlaylistListResponse> {
     private static final String YOUTUBE_PLAYLIST_PART = "snippet";
     private static final String YOUTUBE_PLAYLIST_FIELDS = "items(id,snippet(title))";
 
-    private YouTube mYouTubeDataApi;
+    private final WeakReference<YouTube> mYouTubeDataApiRef;
 
     public GetPlaylistDataAsyncTask(YouTube api) {
-        mYouTubeDataApi = api;
+        this.mYouTubeDataApiRef = new WeakReference<YouTube>(api);
     }
 
     @Override
@@ -25,7 +26,7 @@ public class GetPlaylistDataAsyncTask extends AsyncTask<String[], Void, Playlist
 
         PlaylistListResponse playlistListResponse;
         try {
-            playlistListResponse = mYouTubeDataApi.playlists()
+            playlistListResponse = mYouTubeDataApiRef.get().playlists()
                     .list(YOUTUBE_PLAYLIST_PART)
                     .setId(TextUtils.join(",", playlistIds))
                     .setFields(YOUTUBE_PLAYLIST_FIELDS)
