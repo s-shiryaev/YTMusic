@@ -2,8 +2,12 @@ package ru.mrsmile2114.ytmusic;
 
 import android.Manifest;
 import android.app.DownloadManager;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,6 +28,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
 import java.util.List;
+import java.util.regex.Matcher;
 
 import at.huber.youtubeExtractor.VideoMeta;
 import at.huber.youtubeExtractor.YouTubeExtractor;
@@ -42,6 +47,7 @@ public class PlaylistItemsFragment extends Fragment {
 
     private OnListFragmentInteractionListener mListener;
     private PlaylistItemsRecyclerViewAdapter recyclerViewAdapter;
+    private DownloadFinishedReceiver onDownloadComplete;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -63,7 +69,27 @@ public class PlaylistItemsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        onDownloadComplete = new DownloadFinishedReceiver(){//create a descendant of a class DownloadFinishedReceiver
+            @Override
+            public void onReceive(final Context context, Intent intent) {
+                super.onReceive(context,intent);
+                DownloadsFragment fragment;
+                fragment = (DownloadsFragment)getActivity().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
+                if (fragment==null){
+                    fragment = new DownloadsFragment();
+                }
+                fragment.RemoveItemByDownloadId(downId);
+            }
+        };
+        getActivity().registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         setRetainInstance(true);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getActivity().unregisterReceiver(onDownloadComplete);
+        onDownloadComplete=null;
     }
 
     @Override
@@ -138,6 +164,7 @@ public class PlaylistItemsFragment extends Fragment {
         @Override
         public void onClick(View v) {
             if (haveStoragePermission()) {
+                ((MainActivity)getActivity()).setMainProgressDialogVisible(true);
                 List<PlaylistItem> CHECKEDITEMS = PlaylistItems.getCheckedItems();
                 for (int i = 0; i < CHECKEDITEMS.size(); i++) {
                     new YouTubeExtractor(getActivity()) {
@@ -162,7 +189,7 @@ public class PlaylistItemsFragment extends Fragment {
                                 downloadIds+=downloadFromUrl(downloadUrl ,videoTitle, filename,false);
                                 DownloadsItems.addItem(DownloadsItems.createDummyItem(videoTitle, downloadIds));
                                 Log.w("DEBUG:", downloadIds);
-                                Fragment fragment;
+                                ((MainActivity)getActivity()).setMainProgressDialogVisible(false);
                                 ((MainActivity)getActivity()).GoToFragment(DownloadsFragment.class);
                             }
                         }

@@ -1,5 +1,6 @@
 package ru.mrsmile2114.ytmusic;
 
+import android.app.ProgressDialog;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity
     private FloatingActionButton fab;
     private NavigationView navigationView;
     private Menu mymenu;
+    private ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +52,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         navigationView.setCheckedItem(R.id.nav_download);
+        mProgressDialog= new ProgressDialog(this);
+        mProgressDialog.setTitle("Please Wait...");
         fab.setImageResource(R.drawable.ic_menu_search);
         GoToFragment(DownloadStartFragment.class);//go to start fragment
     }
@@ -187,6 +191,14 @@ public class MainActivity extends AppCompatActivity
 
     public void SetCheckedItem(int id){
         navigationView.setCheckedItem(id);
+    }
+
+    public void setMainProgressDialogVisible(boolean visible){
+        if (visible){
+            mProgressDialog.show();
+        } else {
+            mProgressDialog.dismiss();
+        }
     }
 
     @Override

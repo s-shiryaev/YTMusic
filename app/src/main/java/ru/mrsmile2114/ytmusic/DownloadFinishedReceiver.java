@@ -41,10 +41,11 @@ import java.util.regex.Pattern;
 
 public class DownloadFinishedReceiver extends BroadcastReceiver {
 
-    private static final String TEMP_FILE_NAME = "tmp-";
-    private static final Pattern ARTIST_TITLE_PATTERN =
+    protected static final String TEMP_FILE_NAME = "tmp-";
+    protected static final Pattern ARTIST_TITLE_PATTERN =
             Pattern.compile("(.+?)(\\s*?)-(\\s*?)(\"|)(\\S(.+?))\\s*?([&\\*+,-/:;<=>@_\\|]+?\\s*?|)(\\z|\"|\\(|\\[|lyric|official)",
                     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    protected String downId;
 
     @Override
     public void onReceive(final Context context, Intent intent) {
@@ -53,12 +54,15 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
             Bundle extras = intent.getExtras();
             DownloadManager.Query q = new DownloadManager.Query();
             long downloadId = extras.getLong(DownloadManager.EXTRA_DOWNLOAD_ID);
+            downId=String.valueOf(downloadId);
             q.setFilterById(downloadId);
             Cursor c = ((DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE)).query(q);
             if (c.moveToFirst()) {
                 int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
                 if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                    String inPath = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME));
+                    //TEST FIX:
+                    String inPath = (c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI))).replace("file://","");
+                    //----
                     String dlTitle = c.getString(c.getColumnIndex(DownloadManager.COLUMN_TITLE));
                     c.close();
                     DownloadStatus dlStatus = getMultiFileDlStatus(context, downloadId, inPath);
@@ -90,7 +94,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
         }
     }
 
-    private void removeTempOnFailure(Context con, long downloadId) {
+    protected void removeTempOnFailure(Context con, long downloadId) {
         File cacheFileDir = new File(con.getCacheDir().getAbsolutePath());
         for (File f : cacheFileDir.listFiles()) {
             if (f.getName().contains(downloadId + "")) {
@@ -100,7 +104,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
         }
     }
 
-    private DownloadStatus getMultiFileDlStatus(Context con, long downloadId, String filePath) {
+    protected DownloadStatus getMultiFileDlStatus(Context con, long downloadId, String filePath) {
         File cacheFileDir = new File(con.getCacheDir().getAbsolutePath());
         File cacheFile = null;
         for (File f : cacheFileDir.listFiles()) {
@@ -148,7 +152,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
         return null;
     }
 
-    private void convertM4a(String inFilePath, String title, String artist) {
+    protected void convertM4a(String inFilePath, String title, String artist) {
         String path = inFilePath.substring(0, inFilePath.lastIndexOf("/"));
         try {
             Movie inAudio = MovieCreator.build(inFilePath);
@@ -171,7 +175,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
         }
     }
 
-    private void mergeMp4(String inFilePathAudio, String inFilePathVideo) {
+    protected void mergeMp4(String inFilePathAudio, String inFilePathVideo) {
         String path = inFilePathVideo.substring(0, inFilePathVideo.lastIndexOf("/"));
         try {
             Movie video = MovieCreator.build(inFilePathVideo);
@@ -194,7 +198,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
         }
     }
 
-    private void writeMetaData(Container out, String artist, String title) {
+    protected void writeMetaData(Container out, String artist, String title) {
         MovieBox mBox = null;
         for (Box box : out.getBoxes()) {
             if (box.getType().contains("moov")) {
@@ -227,7 +231,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
     }
 
     // From the mp4parser metadata example
-    private void correctChunkOffsets(Container container, long correction) {
+    protected void correctChunkOffsets(Container container, long correction) {
         List<Box> chunkOffsetBoxes = Path.getPaths(container, "/moov[0]/trak/mdia[0]/minf[0]/stbl[0]/stco[0]");
         for (Box chunkOffsetBox : chunkOffsetBoxes) {
 
@@ -246,7 +250,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
         }
     }
 
-    private void scanFile(String path, Context con) {
+    protected void scanFile(String path, Context con) {
         File file = new File(path);
         Intent scanFileIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file));
         con.sendBroadcast(scanFileIntent);

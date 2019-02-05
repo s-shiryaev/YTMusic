@@ -3,6 +3,7 @@ package ru.mrsmile2114.ytmusic;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -89,6 +90,17 @@ public class DownloadsFragment extends Fragment {
     public void RefreshRecyclerView(){
         mAdapter.notifyDataSetChanged();
     }
+
+    public void RemoveItemByDownloadId(String downloadId){
+        DownloadsItem item = DownloadsItems.getITEMbyDownloadId(downloadId);
+        if (item != null){
+            DownloadsItems.getITEMS().remove(item);
+            if(mAdapter!=null){
+                mAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+
 
     /**
      * This interface must be implemented by activities that contain this

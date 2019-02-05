@@ -19,24 +19,21 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
     private static final String YOUTUBE_PLAYLIST_FIELDS = "items(id,snippet(title,thumbnails),contentDetails(videoId))";
     private static final String YOUTUBE_MAX_RESULTS = "25";
 
-    private final WeakReference<ProgressDialog> progressDialogRef;  //no memory leak?
-    private final WeakReference<YouTube> mYouTubeDataApiRef;        //
+    //no memory leak
+    private final WeakReference<YouTube> mYouTubeDataApiRef;
     private WeakReference<MainActivity> activityReference;
 
     private IOException e;
 
-    public GetPlaylistItemsAsyncTask(YouTube api, ProgressDialog dialog, MainActivity context) {
+    public GetPlaylistItemsAsyncTask(YouTube api, MainActivity context) {
         this.mYouTubeDataApiRef = new WeakReference<YouTube>(api);
-        this.progressDialogRef = new WeakReference<ProgressDialog>(dialog);
         this.activityReference = new WeakReference<>(context);
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        progressDialogRef.get().setTitle("Please wait.....");
-        progressDialogRef.get().show();
-
+        activityReference.get().setMainProgressDialogVisible(true);
     }
 
     @Override
@@ -66,24 +63,23 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
     @Override
     protected void onPostExecute(PlaylistItemListResponse playlistListResponse) {
         super.onPostExecute(playlistListResponse);
+        activityReference.get().setMainProgressDialogVisible(false);
         if (playlistListResponse==null){
-            progressDialogRef.get().dismiss();
             Snackbar.make(activityReference.get().getCurrentFocus(),
                     "Youtube API error: "+e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1),
                     Snackbar.LENGTH_LONG)
                     .setAction("Action", null)
                     .show();
-            return;
-        }
-        PlaylistItems.clearItems();//delete data
-        for(int i=0;i<playlistListResponse.getItems().size();i++){
-            PlaylistItems.addItem(PlaylistItems.createDummyItem(
-                    playlistListResponse.getItems().get(i).getSnippet().getTitle(),
-                    playlistListResponse.getItems().get(i).getContentDetails().getVideoId(),
-                    playlistListResponse.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl()));
+        } else {
+            PlaylistItems.clearItems();//delete data
+            for(int i=0;i<playlistListResponse.getItems().size();i++){
+                PlaylistItems.addItem(PlaylistItems.createDummyItem(
+                        playlistListResponse.getItems().get(i).getSnippet().getTitle(),
+                        playlistListResponse.getItems().get(i).getContentDetails().getVideoId(),
+                        playlistListResponse.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl()));
+            }
+            activityReference.get().GoToFragment(PlaylistItemsFragment.class);
         }
 
-        progressDialogRef.get().dismiss();
-        activityReference.get().GoToFragment(PlaylistItemsFragment.class);
     }
 }

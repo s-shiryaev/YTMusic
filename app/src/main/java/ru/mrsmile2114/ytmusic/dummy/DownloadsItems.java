@@ -27,6 +27,14 @@ public class DownloadsItems {
         return ITEMS;
     }
     public static DownloadsItem getITEMbyId(int id){return ITEMS.get(id);}
+    public static DownloadsItem getITEMbyDownloadId(String downloadId){
+        for (int i=0;i<ITEMS.size();i++){
+            if (ITEMS.get(i).getDownloadId().equals(downloadId)){
+                return ITEMS.get(i);
+            }
+        }
+        return null;
+    }
 
     /**
      * A dummy item representing a piece of content.

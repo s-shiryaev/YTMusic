@@ -34,7 +34,6 @@ public class DownloadStartFragment extends Fragment {
     private EditText editText;
     private View mView;
     private YouTube mYoutubeDataApi;
-    private ProgressDialog progressDialog;
     private AsyncTask<String, Void, PlaylistItemListResponse> task;
 
     private final GsonFactory mJsonFactory = new GsonFactory();
@@ -69,7 +68,6 @@ public class DownloadStartFragment extends Fragment {
         mYoutubeDataApi = new YouTube.Builder(mTransport, mJsonFactory, null)
                 .setApplicationName(getResources().getString(R.string.app_name))
                 .build();
-        progressDialog = new ProgressDialog(getActivity());
         ((MainActivity)getActivity()).SetMainFabListener(FabList);
         ((MainActivity)getActivity()).SetMainFabImage(R.drawable.ic_menu_search);
         ((MainActivity)getActivity()).SetMainFabVisible(true);
@@ -83,7 +81,6 @@ public class DownloadStartFragment extends Fragment {
         mView = null;
         editText = null;
         task = null;
-        progressDialog = null;
         mYoutubeDataApi = null;
         ((MainActivity)getActivity()).SetMainFabVisible(false);
     }
@@ -136,7 +133,7 @@ public class DownloadStartFragment extends Fragment {
                 if (s.contains("www.youtube.com/playlist?list=")){
                     s=s.copyValueOf(s.toCharArray(),s.indexOf("=")+1,s.length()-s.indexOf("=")-1);//get playlist id
                     //STARTING REQUEST TO API
-                    task = new GetPlaylistItemsAsyncTask(mYoutubeDataApi,progressDialog,(MainActivity)getActivity());
+                    task = new GetPlaylistItemsAsyncTask(mYoutubeDataApi,(MainActivity)getActivity());
                     task.execute(s);
                 }
             }else {
