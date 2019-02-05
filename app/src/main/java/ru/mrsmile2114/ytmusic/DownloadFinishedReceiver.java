@@ -45,7 +45,6 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
     protected static final Pattern ARTIST_TITLE_PATTERN =
             Pattern.compile("(.+?)(\\s*?)-(\\s*?)(\"|)(\\S(.+?))\\s*?([&\\*+,-/:;<=>@_\\|]+?\\s*?|)(\\z|\"|\\(|\\[|lyric|official)",
                     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-    protected String downId;
 
     @Override
     public void onReceive(final Context context, Intent intent) {
@@ -54,7 +53,6 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
             Bundle extras = intent.getExtras();
             DownloadManager.Query q = new DownloadManager.Query();
             long downloadId = extras.getLong(DownloadManager.EXTRA_DOWNLOAD_ID);
-            downId=String.valueOf(downloadId);
             q.setFilterById(downloadId);
             Cursor c = ((DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE)).query(q);
             if (c.moveToFirst()) {

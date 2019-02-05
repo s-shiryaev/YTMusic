@@ -78,7 +78,7 @@ public class PlaylistItemsFragment extends Fragment {
                 if (fragment==null){
                     fragment = new DownloadsFragment();
                 }
-                fragment.RemoveItemByDownloadId(downId);
+                fragment.RemoveItemByDownloadId(String.valueOf(intent.getExtras().getLong(DownloadManager.EXTRA_DOWNLOAD_ID)));
             }
         };
         getActivity().registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
