@@ -70,8 +70,12 @@ public class PlaylistItemsRecyclerViewAdapter extends RecyclerView.Adapter<Playl
 
 
     public void setAllChecked(boolean checked){
-        for(int i=0;i<getItemCount();i++){
-        mCheckboxList.get(i).setChecked(checked);
+        int i=0;
+        for(i=0;i<mCheckboxList.size();i++){
+            mCheckboxList.get(i).setChecked(checked);
+        }
+        for (i=i;i<mValues.size();i++){
+            mValues.get(i).setChecked(checked);
         }
     }
 
