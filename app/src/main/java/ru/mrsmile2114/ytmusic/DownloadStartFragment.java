@@ -1,6 +1,5 @@
 package ru.mrsmile2114.ytmusic;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -17,8 +16,6 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
-
-import ru.mrsmile2114.ytmusic.dummy.PlaylistItems;
 
 
 /**
@@ -135,6 +132,9 @@ public class DownloadStartFragment extends Fragment {
                     //STARTING REQUEST TO API
                     task = new GetPlaylistItemsAsyncTask(mYoutubeDataApi,(MainActivity)getActivity());
                     task.execute(s);
+                } else {
+                    ((MainActivity)getActivity()).setMainProgressDialogVisible(true);
+                    ((MainActivity)getActivity()).StartAsyncYtExtraction(s);
                 }
             }else {
                 Snackbar.make(mView, "Please insert correct link to the playlist/video!", Snackbar.LENGTH_LONG)

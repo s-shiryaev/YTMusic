@@ -1,10 +1,11 @@
 package ru.mrsmile2114.ytmusic;
 
+import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -24,6 +25,7 @@ public class DownloadsFragment extends Fragment {
 
         private OnListFragmentInteractionListener mListener;
         private MyDownloadsRecyclerViewAdapter mAdapter;
+        private DownloadFinishedReceiver onDownloadComplete;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -45,7 +47,27 @@ public class DownloadsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        onDownloadComplete = new DownloadFinishedReceiver(){//create a descendant of a class DownloadFinishedReceiver
+            @Override
+            public void onReceive(final Context context, Intent intent) {
+                super.onReceive(context,intent);
+                DownloadsFragment fragment;
+                fragment = (DownloadsFragment)getActivity().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
+                if (fragment==null){
+                    fragment = new DownloadsFragment();
+                }
+                fragment.RemoveItemByDownloadId(String.valueOf(intent.getExtras().getLong(DownloadManager.EXTRA_DOWNLOAD_ID)));
+            }
+        };
+        getActivity().registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         setRetainInstance(true);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getActivity().unregisterReceiver(onDownloadComplete);
+        onDownloadComplete=null;
     }
 
     @Override

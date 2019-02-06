@@ -1,11 +1,17 @@
 package ru.mrsmile2114.ytmusic;
 
+import android.app.DownloadManager;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -17,6 +23,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CheckBox;
 
+import at.huber.youtubeExtractor.VideoMeta;
+import at.huber.youtubeExtractor.YouTubeExtractor;
+import at.huber.youtubeExtractor.YtFile;
 import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
 import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
 
@@ -53,6 +62,8 @@ public class MainActivity extends AppCompatActivity
 
         navigationView.setCheckedItem(R.id.nav_download);
         mProgressDialog= new ProgressDialog(this);
+        mProgressDialog.setCanceledOnTouchOutside(false);
+        mProgressDialog.setCancelable(false);
         mProgressDialog.setTitle("Please Wait...");
         fab.setImageResource(R.drawable.ic_menu_search);
         GoToFragment(DownloadStartFragment.class);//go to start fragment
@@ -204,5 +215,55 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onListFragmentInteraction(DownloadsItems.DownloadsItem item) {
 
+    }
+
+    public long downloadFromUrl(String youtubeDlUrl, String downloadTitle, String fileName, boolean hide) {
+        Uri uri = Uri.parse(youtubeDlUrl);
+        DownloadManager.Request request = new DownloadManager.Request(uri);
+        request.setTitle(downloadTitle);
+        if (hide) {
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+            request.setVisibleInDownloadsUi(false);
+        } else
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS+"/YTMusic", fileName);
+
+        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        return manager.enqueue(request);
+    }
+
+    public void StartAsyncYtExtraction(String url){
+        new YouTubeExtractor(this) {
+            @Override
+            protected void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta vMeta) {
+                int itag = 140;
+                if (ytFiles!=null){
+                    String downloadUrl = ytFiles.get(itag).getUrl();
+                    YtFile ytFile = ytFiles.get(itag);
+                    YtFile audioFile = ytFile;
+                    String downloadIds = "";
+                    String filename;
+                    String videoTitle = vMeta.getTitle();
+                    if (videoTitle.length() > 55) {
+                        filename = videoTitle.substring(0, 55);
+                    } else {
+                        filename = videoTitle;
+                    }
+                    filename = filename.replaceAll("[\\\\><\"|*?%:#/]", "");
+                    filename += "." + audioFile.getFormat().getExt();
+                    downloadIds+=downloadFromUrl(downloadUrl ,videoTitle, filename,false);
+                    DownloadsItems.addItem(DownloadsItems.createDummyItem(videoTitle, downloadIds));
+                    Log.w("DEBUG:", downloadIds);
+                    setMainProgressDialogVisible(false);
+                    GoToFragment(DownloadsFragment.class);
+                } else {
+                    setMainProgressDialogVisible(false);
+                    Snackbar.make(findViewById(R.id.sample_content_fragment), "Please insert correct link to the playlist/video!", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+            }
+
+        }.extract(url, true, true);
     }
 }

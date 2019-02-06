@@ -1,26 +1,16 @@
 package ru.mrsmile2114.ytmusic;
 
 import android.Manifest;
-import android.app.DownloadManager;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,12 +18,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
 import java.util.List;
-import java.util.regex.Matcher;
 
-import at.huber.youtubeExtractor.VideoMeta;
-import at.huber.youtubeExtractor.YouTubeExtractor;
-import at.huber.youtubeExtractor.YtFile;
-import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
 import ru.mrsmile2114.ytmusic.dummy.PlaylistItems;
 import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
 
@@ -47,7 +32,6 @@ public class PlaylistItemsFragment extends Fragment {
 
     private OnListFragmentInteractionListener mListener;
     private PlaylistItemsRecyclerViewAdapter recyclerViewAdapter;
-    private DownloadFinishedReceiver onDownloadComplete;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -69,27 +53,12 @@ public class PlaylistItemsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        onDownloadComplete = new DownloadFinishedReceiver(){//create a descendant of a class DownloadFinishedReceiver
-            @Override
-            public void onReceive(final Context context, Intent intent) {
-                super.onReceive(context,intent);
-                DownloadsFragment fragment;
-                fragment = (DownloadsFragment)getActivity().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
-                if (fragment==null){
-                    fragment = new DownloadsFragment();
-                }
-                fragment.RemoveItemByDownloadId(String.valueOf(intent.getExtras().getLong(DownloadManager.EXTRA_DOWNLOAD_ID)));
-            }
-        };
-        getActivity().registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         setRetainInstance(true);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        getActivity().unregisterReceiver(onDownloadComplete);
-        onDownloadComplete=null;
     }
 
     @Override
@@ -167,54 +136,13 @@ public class PlaylistItemsFragment extends Fragment {
                 ((MainActivity)getActivity()).setMainProgressDialogVisible(true);
                 List<PlaylistItem> CHECKEDITEMS = PlaylistItems.getCheckedItems();
                 for (int i = 0; i < CHECKEDITEMS.size(); i++) {
-                    new YouTubeExtractor(getActivity()) {
-                        @Override
-                        protected void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta vMeta) {
-                            if (ytFiles != null) {
-                                int itag = 140;
-                                String downloadUrl = ytFiles.get(itag).getUrl();
-                                YtFile ytFile = ytFiles.get(itag);
-                                YtFragmentedVideo frVideo = new YtFragmentedVideo();
-                                frVideo.audioFile = ytFile;
-                                String downloadIds = "";
-                                String filename;
-                                String videoTitle = vMeta.getTitle();
-                                if (videoTitle.length() > 55) {
-                                    filename = videoTitle.substring(0, 55);
-                                } else {
-                                    filename = videoTitle;
-                                }
-                                filename = filename.replaceAll("[\\\\><\"|*?%:#/]", "");
-                                filename += "." + frVideo.audioFile.getFormat().getExt();
-                                downloadIds+=downloadFromUrl(downloadUrl ,videoTitle, filename,false);
-                                DownloadsItems.addItem(DownloadsItems.createDummyItem(videoTitle, downloadIds));
-                                Log.w("DEBUG:", downloadIds);
-                                ((MainActivity)getActivity()).setMainProgressDialogVisible(false);
-                                ((MainActivity)getActivity()).GoToFragment(DownloadsFragment.class);
-                            }
-                        }
-
-                    }.extract(CHECKEDITEMS.get(i).getUrl(), true, true);
+                    ((MainActivity)getActivity()).StartAsyncYtExtraction(CHECKEDITEMS.get(i).getUrl());
                 }
             }
         }
     };
 
-    private long downloadFromUrl(String youtubeDlUrl, String downloadTitle, String fileName, boolean hide) {
-        Uri uri = Uri.parse(youtubeDlUrl);
-        DownloadManager.Request request = new DownloadManager.Request(uri);
-        request.setTitle(downloadTitle);
-        if (hide) {
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
-            request.setVisibleInDownloadsUi(false);
-        } else
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS+"/YTMusic", fileName);
-
-        DownloadManager manager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
-        return manager.enqueue(request);
-    }
 
     public final CheckBox.OnCheckedChangeListener CheckBoxListener = new CheckBox.OnCheckedChangeListener(){
             @Override
@@ -242,9 +170,4 @@ public class PlaylistItemsFragment extends Fragment {
         }
     }
 
-    private class YtFragmentedVideo {
-        int height;
-        YtFile audioFile;
-        YtFile videoFile;
-    }
 }
