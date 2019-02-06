@@ -1,15 +1,20 @@
 package ru.mrsmile2114.ytmusic;
 
+import android.Manifest;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
@@ -128,10 +133,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
 
     public View.OnClickListener FabListMain = new View.OnClickListener() {
         @Override
@@ -186,9 +187,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void SetMainFabListener(View.OnClickListener listener){ fab.setOnClickListener(listener); }
-    public void SetMainFabImage(int imageResourse){ fab.setImageResource(imageResourse); }
-    public void SetMainFabVisible(boolean vis){
-        if (vis){
+    public void SetMainFabImage(int imageResource){ fab.setImageResource(imageResource); }
+    public void SetMainFabVisible(boolean visible){
+        if (visible){
             fab.show();
         } else {
             fab.hide();
@@ -200,11 +201,8 @@ public class MainActivity extends AppCompatActivity
         ((CheckBox)mymenu.findItem(R.id.action_check_box).getActionView()).setOnCheckedChangeListener(listener);
     }
 
-    public void SetCheckedItem(int id){
-        navigationView.setCheckedItem(id);
-    }
 
-    public void setMainProgressDialogVisible(boolean visible){
+    public void SetMainProgressDialogVisible(boolean visible){
         if (visible){
             mProgressDialog.show();
         } else {
@@ -255,15 +253,39 @@ public class MainActivity extends AppCompatActivity
                     downloadIds+=downloadFromUrl(downloadUrl ,videoTitle, filename,false);
                     DownloadsItems.addItem(DownloadsItems.createDummyItem(videoTitle, downloadIds));
                     Log.w("DEBUG:", downloadIds);
-                    setMainProgressDialogVisible(false);
+                    SetMainProgressDialogVisible(false);
                     GoToFragment(DownloadsFragment.class);
                 } else {
-                    setMainProgressDialogVisible(false);
+                    SetMainProgressDialogVisible(false);
                     Snackbar.make(findViewById(R.id.sample_content_fragment), "Please insert correct link to the playlist/video!", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
             }
 
         }.extract(url, true, true);
+    }
+
+    @Override
+    public void SetTitle(String title) { setTitle(title); }
+
+    @Override
+    public boolean HaveStoragePermission() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.e("Permission error","You have permission");
+                return true;
+            } else {
+                Log.e("Permission error","You have asked for permission");
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                return false;
+            }
+        }
+        else {
+            Log.e("Permission error","You already have the permission");
+            return true;
+        }
     }
 }

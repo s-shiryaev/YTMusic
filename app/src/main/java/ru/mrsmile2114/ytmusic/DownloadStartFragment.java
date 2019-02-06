@@ -1,7 +1,6 @@
 package ru.mrsmile2114.ytmusic;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -65,10 +64,10 @@ public class DownloadStartFragment extends Fragment {
         mYoutubeDataApi = new YouTube.Builder(mTransport, mJsonFactory, null)
                 .setApplicationName(getResources().getString(R.string.app_name))
                 .build();
-        ((MainActivity)getActivity()).SetMainFabListener(FabList);
-        ((MainActivity)getActivity()).SetMainFabImage(R.drawable.ic_menu_search);
-        ((MainActivity)getActivity()).SetMainFabVisible(true);
-        ((MainActivity)getActivity()).setTitle(R.string.nav_header_title);
+        mListener.SetMainFabListener(FabList);
+        mListener.SetMainFabImage(R.drawable.ic_menu_search);
+        mListener.SetMainFabVisible(true);
+        mListener.SetTitle(getResources().getString(R.string.action_download));
         return mView;
     }
 
@@ -79,15 +78,9 @@ public class DownloadStartFragment extends Fragment {
         editText = null;
         task = null;
         mYoutubeDataApi = null;
-        ((MainActivity)getActivity()).SetMainFabVisible(false);
+        mListener.SetMainFabVisible(false);
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
 
     @Override
     public void onAttach(Context context) {
@@ -117,8 +110,14 @@ public class DownloadStartFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+
+        void SetMainFabVisible(boolean visible);
+        void SetMainFabImage(int imageResource);
+        void SetMainFabListener(View.OnClickListener listener);
+        void SetMainProgressDialogVisible(boolean visible);
+        void StartAsyncYtExtraction(String url);
+        void SetTitle(String title);
+        boolean HaveStoragePermission();
     }
 
 
@@ -133,8 +132,10 @@ public class DownloadStartFragment extends Fragment {
                     task = new GetPlaylistItemsAsyncTask(mYoutubeDataApi,(MainActivity)getActivity());
                     task.execute(s);
                 } else {
-                    ((MainActivity)getActivity()).setMainProgressDialogVisible(true);
-                    ((MainActivity)getActivity()).StartAsyncYtExtraction(s);
+                    if (mListener.HaveStoragePermission()){
+                        mListener.SetMainProgressDialogVisible(true);
+                        mListener.StartAsyncYtExtraction(s);
+                    }
                 }
             }else {
                 Snackbar.make(mView, "Please insert correct link to the playlist/video!", Snackbar.LENGTH_LONG)

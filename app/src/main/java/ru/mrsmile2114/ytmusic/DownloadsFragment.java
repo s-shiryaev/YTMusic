@@ -83,7 +83,7 @@ public class DownloadsFragment extends Fragment {
             mAdapter = new MyDownloadsRecyclerViewAdapter(DownloadsItems.getITEMS(), mListener);
             recyclerView.setAdapter(mAdapter);
         }
-        ((MainActivity)getActivity()).setTitle("Active downloads");
+        mListener.SetTitle("Active downloads");
         return view;
     }
     @Override
@@ -137,5 +137,11 @@ public class DownloadsFragment extends Fragment {
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
         void onListFragmentInteraction(DownloadsItem item);
+
+        void SetMainFabVisible(boolean visible);
+        void SetMainFabImage(int imageResource);
+        void SetMainFabListener(View.OnClickListener listener);
+        void SetMainProgressDialogVisible(boolean visible);
+        void SetTitle(String title);
     }
 }

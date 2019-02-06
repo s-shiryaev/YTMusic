@@ -74,13 +74,13 @@ public class PlaylistItemsFragment extends Fragment {
             recyclerViewAdapter = new PlaylistItemsRecyclerViewAdapter(PlaylistItems.getITEMS(), mListener);
             recyclerView.setAdapter(recyclerViewAdapter);
         }
-        ((MainActivity)getActivity()).SetMainFabListener(FabList);
-        ((MainActivity)getActivity()).SetMainFabImage(R.drawable.ic_menu_download);
-        ((MainActivity)getActivity()).SetMainFabVisible(true);
-        ((MainActivity)getActivity()).SetMainCheckBoxVisible(true);
-        ((MainActivity)getActivity()).SetMainCheckBoxListener(CheckBoxListener);
+        mListener.SetMainFabListener(FabList);
+        mListener.SetMainFabImage(R.drawable.ic_menu_download);
+        mListener.SetMainFabVisible(true);
+        mListener.SetMainCheckBoxVisible(true);
+        mListener.SetMainCheckBoxListener(CheckBoxListener);
         //System.out.println("SUCCESSSSS");//TODO:DELETE
-        ((MainActivity)getActivity()).setTitle("Select videos to download");
+        mListener.SetTitle("Select videos to download");
         return view;
     }
 
@@ -88,8 +88,8 @@ public class PlaylistItemsFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         recyclerViewAdapter=null;
-        ((MainActivity)getActivity()).SetMainCheckBoxVisible(false);
-        ((MainActivity)getActivity()).SetMainFabVisible(false);
+        mListener.SetMainCheckBoxVisible(false);
+        mListener.SetMainFabVisible(false);
     }
 
 
@@ -127,16 +127,27 @@ public class PlaylistItemsFragment extends Fragment {
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
         void onListFragmentInteraction(PlaylistItem item);
+
+        void SetMainFabVisible(boolean visible);
+        void SetMainFabImage(int imageResource);
+        void SetMainFabListener(View.OnClickListener listener);
+        void SetMainProgressDialogVisible(boolean visible);
+        void StartAsyncYtExtraction(String url);
+        void SetTitle(String title);
+        boolean HaveStoragePermission();
+
+        void SetMainCheckBoxVisible(boolean visible);
+        void SetMainCheckBoxListener(CheckBox.OnCheckedChangeListener listener);
     }
 
     public final View.OnClickListener FabList = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (haveStoragePermission()) {
-                ((MainActivity)getActivity()).setMainProgressDialogVisible(true);
+            if (mListener.HaveStoragePermission()) {
+                mListener.SetMainProgressDialogVisible(true);
                 List<PlaylistItem> CHECKEDITEMS = PlaylistItems.getCheckedItems();
                 for (int i = 0; i < CHECKEDITEMS.size(); i++) {
-                    ((MainActivity)getActivity()).StartAsyncYtExtraction(CHECKEDITEMS.get(i).getUrl());
+                    mListener.StartAsyncYtExtraction(CHECKEDITEMS.get(i).getUrl());
                 }
             }
         }
@@ -152,22 +163,5 @@ public class PlaylistItemsFragment extends Fragment {
             }
         };
 
-    public  boolean haveStoragePermission() {
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (ContextCompat.checkSelfPermission(getActivity(),Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    == PackageManager.PERMISSION_GRANTED) {
-                Log.e("Permission error","You have permission");
-                return true;
-            } else {
-                Log.e("Permission error","You have asked for permission");
-                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-                return false;
-            }
-        }
-        else {
-            Log.e("Permission error","You already have the permission");
-            return true;
-        }
-    }
 
 }

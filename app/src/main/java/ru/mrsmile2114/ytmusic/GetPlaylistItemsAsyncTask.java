@@ -29,7 +29,7 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        activityReference.get().setMainProgressDialogVisible(true);
+        activityReference.get().SetMainProgressDialogVisible(true);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
     @Override
     protected void onPostExecute(PlaylistItemListResponse playlistListResponse) {
         super.onPostExecute(playlistListResponse);
-        activityReference.get().setMainProgressDialogVisible(false);
+        activityReference.get().SetMainProgressDialogVisible(false);
         if (playlistListResponse==null){
             Snackbar.make(activityReference.get().getCurrentFocus(),
                     "Youtube API error: "+e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1),
