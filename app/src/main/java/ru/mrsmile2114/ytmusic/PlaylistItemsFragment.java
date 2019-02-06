@@ -219,7 +219,8 @@ public class PlaylistItemsFragment extends Fragment {
     public final CheckBox.OnCheckedChangeListener CheckBoxListener = new CheckBox.OnCheckedChangeListener(){
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                recyclerViewAdapter.setAllChecked(isChecked);
+                PlaylistItems.setAllChecked(isChecked);
+                recyclerViewAdapter.notifyDataSetChanged();
             }
         };
 

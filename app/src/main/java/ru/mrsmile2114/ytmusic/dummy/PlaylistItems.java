@@ -37,6 +37,11 @@ public class PlaylistItems {
     public static void clearItems(){
         ITEMS.clear();
     }
+    public static void setAllChecked(boolean checked){
+        for(int i=0;i<ITEMS.size();i++){
+            ITEMS.get(i).setChecked(checked);
+        }
+    }
 
     /**
      * A dummy item representing a piece of content.

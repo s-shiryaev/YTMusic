@@ -25,7 +25,6 @@ public class PlaylistItemsRecyclerViewAdapter extends RecyclerView.Adapter<Playl
 
     private final List<PlaylistItem> mValues;
     private final OnListFragmentInteractionListener mListener;
-    private List<CheckBox> mCheckboxList = new ArrayList<CheckBox>();
 
     public PlaylistItemsRecyclerViewAdapter(List<PlaylistItem> items, OnListFragmentInteractionListener listener) {
         mValues = items;
@@ -53,14 +52,13 @@ public class PlaylistItemsRecyclerViewAdapter extends RecyclerView.Adapter<Playl
             }
         });
         Picasso.get().load(mValues.get(position).getThumbnail()).into(holder.mImageView);
-        holder.mCheckBox.setChecked(mValues.get(position).getChecked());//fill checkbox
+        holder.mCheckBox.setChecked(holder.mItem.getChecked());//fill checkbox
         holder.mCheckBox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mValues.get(position).setChecked(isChecked);
+                holder.mItem.setChecked(isChecked);
             }
         });
-        mCheckboxList.add(holder.mCheckBox);
     }
 
     @Override
@@ -68,16 +66,6 @@ public class PlaylistItemsRecyclerViewAdapter extends RecyclerView.Adapter<Playl
         return mValues.size();
     }
 
-
-    public void setAllChecked(boolean checked){
-        int i=0;
-        for(i=0;i<mCheckboxList.size();i++){
-            mCheckboxList.get(i).setChecked(checked);
-        }
-        for (i=i;i<mValues.size();i++){
-            mValues.get(i).setChecked(checked);
-        }
-    }
 
     public class ViewHolder extends RecyclerView.ViewHolder{
         public final View mView;
