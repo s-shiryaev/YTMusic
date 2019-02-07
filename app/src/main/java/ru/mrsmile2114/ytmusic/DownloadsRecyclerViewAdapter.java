@@ -4,9 +4,11 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import ru.mrsmile2114.ytmusic.DownloadsFragment.OnListFragmentInteractionListener;
+import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
 import ru.mrsmile2114.ytmusic.dummy.DownloadsItems.DownloadsItem;
 
 import java.util.List;
@@ -16,12 +18,12 @@ import java.util.List;
  * specified {@link OnListFragmentInteractionListener}.
  *
  */
-public class MyDownloadsRecyclerViewAdapter extends RecyclerView.Adapter<MyDownloadsRecyclerViewAdapter.ViewHolder> {
+public class DownloadsRecyclerViewAdapter extends RecyclerView.Adapter<DownloadsRecyclerViewAdapter.ViewHolder> {
 
     private final List<DownloadsItem> mValues;
     private final OnListFragmentInteractionListener mListener;
 
-    public MyDownloadsRecyclerViewAdapter(List<DownloadsItem> items, OnListFragmentInteractionListener listener) {
+    public DownloadsRecyclerViewAdapter(List<DownloadsItem> items, OnListFragmentInteractionListener listener) {
         mValues = items;
         mListener = listener;
     }
@@ -37,7 +39,6 @@ public class MyDownloadsRecyclerViewAdapter extends RecyclerView.Adapter<MyDownl
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
         holder.mContentView.setText(mValues.get(position).getTitle());
-
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -45,6 +46,14 @@ public class MyDownloadsRecyclerViewAdapter extends RecyclerView.Adapter<MyDownl
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
                     mListener.onListFragmentInteraction(holder.mItem);
+                }
+            }
+        });
+        holder.mButton.setOnClickListener(new Button.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if (null != mListener) {
+                    mListener.RemoveItemByDownloadId(holder.mItem.getDownloadId());
                 }
             }
         });
@@ -58,12 +67,14 @@ public class MyDownloadsRecyclerViewAdapter extends RecyclerView.Adapter<MyDownl
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final View mView;
         private final TextView mContentView;
+        private final Button mButton;
         private DownloadsItem mItem;
 
         public ViewHolder(View view) {
             super(view);
             mView = view;
             mContentView = (TextView) view.findViewById(R.id.content);
+            mButton = (Button) view.findViewById(R.id.button);
         }
 
         @Override

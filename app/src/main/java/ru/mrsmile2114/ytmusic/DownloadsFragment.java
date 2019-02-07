@@ -11,6 +11,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
 
 import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
 import ru.mrsmile2114.ytmusic.dummy.DownloadsItems.DownloadsItem;
@@ -24,8 +26,7 @@ import ru.mrsmile2114.ytmusic.dummy.DownloadsItems.DownloadsItem;
 public class DownloadsFragment extends Fragment {
 
         private OnListFragmentInteractionListener mListener;
-        private MyDownloadsRecyclerViewAdapter mAdapter;
-        private DownloadFinishedReceiver onDownloadComplete;
+        private DownloadsRecyclerViewAdapter mAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -47,27 +48,12 @@ public class DownloadsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        onDownloadComplete = new DownloadFinishedReceiver(){//create a descendant of a class DownloadFinishedReceiver
-            @Override
-            public void onReceive(final Context context, Intent intent) {
-                super.onReceive(context,intent);
-                DownloadsFragment fragment;
-                fragment = (DownloadsFragment)getActivity().getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
-                if (fragment==null){
-                    fragment = new DownloadsFragment();
-                }
-                fragment.RemoveItemByDownloadId(String.valueOf(intent.getExtras().getLong(DownloadManager.EXTRA_DOWNLOAD_ID)));
-            }
-        };
-        getActivity().registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         setRetainInstance(true);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        getActivity().unregisterReceiver(onDownloadComplete);
-        onDownloadComplete=null;
     }
 
     @Override
@@ -80,7 +66,7 @@ public class DownloadsFragment extends Fragment {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            mAdapter = new MyDownloadsRecyclerViewAdapter(DownloadsItems.getITEMS(), mListener);
+            mAdapter = new DownloadsRecyclerViewAdapter(DownloadsItems.getITEMS(), mListener);
             recyclerView.setAdapter(mAdapter);
         }
         mListener.SetTitle("Active downloads");
@@ -117,9 +103,9 @@ public class DownloadsFragment extends Fragment {
         DownloadsItem item = DownloadsItems.getITEMbyDownloadId(downloadId);
         if (item != null){
             DownloadsItems.getITEMS().remove(item);
-            if(mAdapter!=null){
-                mAdapter.notifyDataSetChanged();
-            }
+        }
+        if(mAdapter!=null){
+            mAdapter.notifyDataSetChanged();
         }
     }
 
@@ -141,6 +127,7 @@ public class DownloadsFragment extends Fragment {
         void SetMainFabVisible(boolean visible);
         void SetMainFabImage(int imageResource);
         void SetMainFabListener(View.OnClickListener listener);
+        void RemoveItemByDownloadId(String downloadId);
         void SetMainProgressDialogVisible(boolean visible);
         void SetTitle(String title);
     }

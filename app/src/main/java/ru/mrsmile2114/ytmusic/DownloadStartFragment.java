@@ -30,7 +30,6 @@ public class DownloadStartFragment extends Fragment {
     private EditText editText;
     private View mView;
     private YouTube mYoutubeDataApi;
-    private AsyncTask<String, Void, PlaylistItemListResponse> task;
 
     private final GsonFactory mJsonFactory = new GsonFactory();
     private final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
@@ -76,7 +75,6 @@ public class DownloadStartFragment extends Fragment {
         super.onDestroyView();
         mView = null;
         editText = null;
-        task = null;
         mYoutubeDataApi = null;
         mListener.SetMainFabVisible(false);
     }
@@ -125,12 +123,11 @@ public class DownloadStartFragment extends Fragment {
         @Override
         public void onClick(View v) {//fab button click
             String s = editText.getText().toString();
-            if ((s.length()!=0)&&(s.contains("www.youtube.com/watch?v=")||s.contains("www.youtube.com/playlist?list=")||s.contains("youtu.be/"))){
+            if ((s.length()!=0)&&(s.contains("youtube.com/watch?v=")||s.contains("www.youtube.com/playlist?list=")||s.contains("youtu.be/"))){
                 if (s.contains("www.youtube.com/playlist?list=")){
                     s=s.copyValueOf(s.toCharArray(),s.indexOf("=")+1,s.length()-s.indexOf("=")-1);//get playlist id
                     //STARTING REQUEST TO API
-                    task = new GetPlaylistItemsAsyncTask(mYoutubeDataApi,(MainActivity)getActivity());
-                    task.execute(s);
+                    new GetPlaylistItemsAsyncTask(mYoutubeDataApi,(MainActivity)getActivity()).execute(s);
                 } else {
                     if (mListener.HaveStoragePermission()){
                         mListener.SetMainProgressDialogVisible(true);

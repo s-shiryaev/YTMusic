@@ -35,19 +35,19 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
     @Override
     protected PlaylistItemListResponse doInBackground(String... params) {
 
-        final String playlistIds = params[0];
+        final String playlistId = params[0];
 
         PlaylistItemListResponse playlistItemListResponse;
         try {
 
             playlistItemListResponse = mYouTubeDataApiRef.get().playlistItems()
                     .list(YOUTUBE_PLAYLIST_PART)
-                    .setPlaylistId(playlistIds)
+                    .setPlaylistId(playlistId)
                     .setMaxResults(Long.parseLong(YOUTUBE_MAX_RESULTS))
                     .setFields(YOUTUBE_PLAYLIST_FIELDS)
                     .setKey(AppConstants.YOUTUBE_KEY)
                     .execute();
-            System.out.println(playlistItemListResponse);//TODO:DELETE
+            //System.out.println(playlistItemListResponse);//TODO:DELETE
         } catch (IOException exc) {
             e=exc;
             e.printStackTrace();

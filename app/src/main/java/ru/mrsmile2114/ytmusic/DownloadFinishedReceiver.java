@@ -85,6 +85,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
                     }
 
                 } else if (status == DownloadManager.STATUS_FAILED) {
+                    System.out.println("FAILED");
                     removeTempOnFailure(context, downloadId);
                 }
             }
