@@ -51,8 +51,8 @@ dependencies {
     implementation 'com.github.HaarigerHarald:android-youtubeExtractor:master-SNAPSHOT'
     implementation 'org.aspectj:aspectjrt:1.8.13'
     implementation 'com.googlecode.mp4parser:isoparser:1.1.22'
-    implementation('com.google.api-client:google-api-client-android:1.25.0') {}
-    implementation('com.google.apis:google-api-services-youtube:v3-rev206-1.25.0') {}
+    implementation 'com.google.api-client:google-api-client-android:1.25.0'
+    implementation 'com.google.apis:google-api-services-youtube:v3-rev206-1.25.0'
     implementation 'com.google.api-client:google-api-client-gson:+'
     implementation 'com.squareup.picasso:picasso:2.71828'
 }

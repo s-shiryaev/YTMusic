@@ -244,7 +244,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void SetMainCheckBoxVisible(boolean vis){mymenu.findItem(R.id.action_check_box).setVisible(vis); }
+    public void SetMainCheckBoxVisible(boolean vis){
+        mymenu.findItem(R.id.action_check_box).setChecked(false);
+        mymenu.findItem(R.id.action_check_box).setVisible(vis);
+    }
     public void SetMainCheckBoxListener(CheckBox.OnCheckedChangeListener listener){
         ((CheckBox)mymenu.findItem(R.id.action_check_box).getActionView()).setOnCheckedChangeListener(listener);
     }
