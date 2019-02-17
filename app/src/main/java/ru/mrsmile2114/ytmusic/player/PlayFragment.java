@@ -122,7 +122,15 @@ public class PlayFragment extends Fragment implements
         mButtonNext = mView.findViewById(R.id.imageButtonNext);
         mButtonPrev = mView.findViewById(R.id.imageButtonPrev);
         mButtonRepeat = mView.findViewById(R.id.imageButtonRepeat);
+        if (isRepeat==1) {
+            mButtonRepeat.setImageResource(R.drawable.ic_media_repeat_one);
+        } else if (isRepeat==2){
+            mButtonRepeat.setImageResource(R.drawable.ic_media_repeat_all);
+        }
         mButtonShuffle = mView.findViewById(R.id.imageButtonShuffle);
+        if(isShuffle){
+            mButtonShuffle.setImageResource(R.drawable.ic_media_shuffle_enabled);
+        }
         mListener.SetTitle(getString(R.string.action_play));
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.replace(R.id.frame_layout_play,queueList);
