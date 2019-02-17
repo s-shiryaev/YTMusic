@@ -1,4 +1,4 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.utils;
 
 import android.os.AsyncTask;
 import android.support.design.widget.Snackbar;
@@ -8,6 +8,9 @@ import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
+import ru.mrsmile2114.ytmusic.AppConstants;
+import ru.mrsmile2114.ytmusic.MainActivity;
+import ru.mrsmile2114.ytmusic.R;
 import ru.mrsmile2114.ytmusic.dummy.PlaylistItems;
 
 public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistItemListResponse> {
@@ -18,12 +21,14 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
     //no memory leak
     private final WeakReference<YouTube> mYouTubeDataApiRef;
     private WeakReference<MainActivity> activityReference;
+    private WeakReference<MainActivity.GetPlaylistItemsCallBackInterface> callbackReference;
 
     private IOException e;
 
-    public GetPlaylistItemsAsyncTask(YouTube api, MainActivity context) {
+    public GetPlaylistItemsAsyncTask(YouTube api, MainActivity context, MainActivity.GetPlaylistItemsCallBackInterface callback) {
         this.mYouTubeDataApiRef = new WeakReference<YouTube>(api);
         this.activityReference = new WeakReference<>(context);
+        this.callbackReference = new WeakReference<>(callback);
     }
 
     @Override
@@ -62,20 +67,12 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
         activityReference.get().SetMainProgressDialogVisible(false);
         if (playlistListResponse==null){
             Snackbar.make(activityReference.get().getCurrentFocus(),
-                    "Youtube API error: "+e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1),
+                    activityReference.get().getString(R.string.api_error)+e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1),
                     Snackbar.LENGTH_LONG)
                     .setAction("Action", null)
                     .show();
         } else {
-            PlaylistItems.clearItems();//delete data
-            for(int i=0;i<playlistListResponse.getItems().size();i++){
-                PlaylistItems.addItem(PlaylistItems.createDummyItem(
-                        playlistListResponse.getItems().get(i).getSnippet().getTitle(),
-                        playlistListResponse.getItems().get(i).getContentDetails().getVideoId(),
-                        playlistListResponse.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl()));
-            }
-            activityReference.get().GoToFragment(PlaylistItemsFragment.class);
+            callbackReference.get().onSuccGetPlaylistItems(playlistListResponse);
         }
-
     }
 }

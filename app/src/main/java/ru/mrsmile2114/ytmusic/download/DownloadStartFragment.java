@@ -1,7 +1,6 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.download;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -15,6 +14,12 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
+
+import ru.mrsmile2114.ytmusic.MainActivity;
+import ru.mrsmile2114.ytmusic.R;
+import ru.mrsmile2114.ytmusic.dummy.PlaylistItems;
+import ru.mrsmile2114.ytmusic.utils.GetPlaylistItemsAsyncTask;
+import ru.mrsmile2114.ytmusic.utils.YTExtract;
 
 
 /**
@@ -61,12 +66,12 @@ public class DownloadStartFragment extends Fragment {
         mView = inflater.inflate(R.layout.fragment_download_start,container,false);
         editText = mView.findViewById(R.id.editText);
         mYoutubeDataApi = new YouTube.Builder(mTransport, mJsonFactory, null)
-                .setApplicationName(getResources().getString(R.string.app_name))
+                .setApplicationName(getString(R.string.app_name))
                 .build();
         mListener.SetMainFabListener(FabList);
         mListener.SetMainFabImage(R.drawable.ic_menu_search);
         mListener.SetMainFabVisible(true);
-        mListener.SetTitle(getResources().getString(R.string.action_download));
+        mListener.SetTitle(getString(R.string.action_download));
         return mView;
     }
 
@@ -113,8 +118,8 @@ public class DownloadStartFragment extends Fragment {
         void SetMainFabImage(int imageResource);
         void SetMainFabListener(View.OnClickListener listener);
         void SetMainProgressDialogVisible(boolean visible);
-        void StartAsyncYtExtraction(String url);
         void SetTitle(String title);
+        long downloadFromUrl(String youtubeDlUrl, String downloadTitle, String fileName, boolean hide);
         boolean HaveStoragePermission();
     }
 
@@ -127,19 +132,40 @@ public class DownloadStartFragment extends Fragment {
                 if (s.contains("www.youtube.com/playlist?list=")){
                     s=s.copyValueOf(s.toCharArray(),s.indexOf("=")+1,s.length()-s.indexOf("=")-1);//get playlist id
                     //STARTING REQUEST TO API
-                    new GetPlaylistItemsAsyncTask(mYoutubeDataApi,(MainActivity)getActivity()).execute(s);
+                    new GetPlaylistItemsAsyncTask(mYoutubeDataApi,(MainActivity)getActivity(),
+                            mGetPlaylistItemsCallBackInterface).execute(s);
                 } else {
                     if (mListener.HaveStoragePermission()){
                         mListener.SetMainProgressDialogVisible(true);
-                        mListener.StartAsyncYtExtraction(s);
+                        new YTExtract(getActivity(),s,1,6,
+                                ((MainActivity)getActivity()).DownloadExtractCallBackInterface)
+                                .execute(s);
                     }
                 }
             }else {
-                Snackbar.make(mView, "Please insert correct link to the playlist/video!", Snackbar.LENGTH_LONG)
+                Snackbar.make(mView, getString(R.string.incorrect_url), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
 
         }
     };
+
+    private MainActivity.GetPlaylistItemsCallBackInterface mGetPlaylistItemsCallBackInterface
+            = new MainActivity.GetPlaylistItemsCallBackInterface() {
+        @Override
+        public void onSuccGetPlaylistItems(PlaylistItemListResponse response) {
+
+                PlaylistItems.clearItems();//delete data
+                for(int i=0;i<response.getItems().size();i++) {
+                    PlaylistItems.addItem(PlaylistItems.createDummyItem(
+                            response.getItems().get(i).getSnippet().getTitle(),
+                            response.getItems().get(i).getContentDetails().getVideoId(),
+                            response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl()));
+                }
+            ((MainActivity)getActivity()).GoToFragment(PlaylistItemsFragment.class);
+        }
+    };
+
+
 
 }

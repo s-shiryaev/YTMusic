@@ -1,11 +1,11 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.utils;
 
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 
 import java.lang.ref.WeakReference;
+
+import ru.mrsmile2114.ytmusic.MainActivity;
 
 public class HandlerOnDownloadCancelled extends Handler {
     private final WeakReference<MainActivity> mActivity;
@@ -19,7 +19,7 @@ public class HandlerOnDownloadCancelled extends Handler {
     public void handleMessage(Message msg) {
         MainActivity activity = mActivity.get();
         if (activity != null) {
-            mActivity.get().RemoveItemByDownloadId((String) msg.obj);
+            mActivity.get().RemoveItemByDownloadId((String) msg.obj,false);
         }
     }
 }

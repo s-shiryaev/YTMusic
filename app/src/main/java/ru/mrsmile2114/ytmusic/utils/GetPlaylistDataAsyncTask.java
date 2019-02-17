@@ -1,4 +1,4 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.utils;
 
 import android.os.AsyncTask;
 import android.text.TextUtils;
@@ -8,6 +8,8 @@ import com.google.api.services.youtube.model.PlaylistListResponse;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+
+import ru.mrsmile2114.ytmusic.AppConstants;
 
 public class GetPlaylistDataAsyncTask extends AsyncTask<String[], Void, PlaylistListResponse> {
     private static final String YOUTUBE_PLAYLIST_PART = "snippet";
@@ -30,7 +32,7 @@ public class GetPlaylistDataAsyncTask extends AsyncTask<String[], Void, Playlist
                     .list(YOUTUBE_PLAYLIST_PART)
                     .setId(TextUtils.join(",", playlistIds))
                     .setFields(YOUTUBE_PLAYLIST_FIELDS)
-                    .setKey(AppConstants.YOUTUBE_KEY) //Here you will have to provide the keys
+                    .setKey(AppConstants.YOUTUBE_KEY)
                     .execute();
         } catch (IOException e) {
             e.printStackTrace();

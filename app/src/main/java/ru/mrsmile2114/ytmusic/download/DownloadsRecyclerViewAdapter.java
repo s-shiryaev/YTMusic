@@ -1,14 +1,15 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.download;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
-import ru.mrsmile2114.ytmusic.DownloadsFragment.OnListFragmentInteractionListener;
-import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
+import ru.mrsmile2114.ytmusic.R;
+import ru.mrsmile2114.ytmusic.download.DownloadsFragment.OnListFragmentInteractionListener;
 import ru.mrsmile2114.ytmusic.dummy.DownloadsItems.DownloadsItem;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public class DownloadsRecyclerViewAdapter extends RecyclerView.Adapter<Downloads
             @Override
             public void onClick(View v) {
                 if (null != mListener) {
-                    mListener.RemoveItemByDownloadId(holder.mItem.getDownloadId());
+                    mListener.RemoveItemByDownloadId(holder.mItem.getDownloadId(),false);
                 }
             }
         });
@@ -67,14 +68,14 @@ public class DownloadsRecyclerViewAdapter extends RecyclerView.Adapter<Downloads
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final View mView;
         private final TextView mContentView;
-        private final Button mButton;
+        private final ImageButton mButton;
         private DownloadsItem mItem;
 
         public ViewHolder(View view) {
             super(view);
             mView = view;
             mContentView = (TextView) view.findViewById(R.id.content);
-            mButton = (Button) view.findViewById(R.id.button);
+            mButton = (ImageButton) view.findViewById(R.id.imageButton);
         }
 
         @Override

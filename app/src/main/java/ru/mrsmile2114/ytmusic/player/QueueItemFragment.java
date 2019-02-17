@@ -1,9 +1,6 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.player;
 
-import android.app.DownloadManager;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,11 +8,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CheckBox;
 
-import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
-import ru.mrsmile2114.ytmusic.dummy.DownloadsItems.DownloadsItem;
+import ru.mrsmile2114.ytmusic.R;
+import ru.mrsmile2114.ytmusic.dummy.QueueItems;
+import ru.mrsmile2114.ytmusic.dummy.QueueItems.QueueItem;
 
 /**
  * A fragment representing a list of Items.
@@ -23,59 +19,47 @@ import ru.mrsmile2114.ytmusic.dummy.DownloadsItems.DownloadsItem;
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
  */
-public class DownloadsFragment extends Fragment {
+public class QueueItemFragment extends Fragment {
 
-        private OnListFragmentInteractionListener mListener;
-        private DownloadsRecyclerViewAdapter mAdapter;
+    private QueueItemRecyclerViewAdapter mAdapter;
+    private OnListFragmentInteractionListener mListener;
+    private OnParentFragmentInteractionListener mParentListener;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public DownloadsFragment() {
+    public QueueItemFragment() {
     }
 
-    // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
-    public static DownloadsFragment newInstance(int columnCount) {
-        DownloadsFragment fragment = new DownloadsFragment();
-        //Bundle args = new Bundle();
-        //args.putInt(ARG_COLUMN_COUNT, columnCount);
-        //fragment.setArguments(args);
+    public static QueueItemFragment newInstance(int columnCount) {
+        QueueItemFragment fragment = new QueueItemFragment();
+        Bundle args = new Bundle();
+
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+        onAttachToParentFragment(getParentFragment());
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_downloads_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_queueitem_list, container, false);
 
         // Set the adapter
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
-            recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            mAdapter = new DownloadsRecyclerViewAdapter(DownloadsItems.getITEMS(), mListener);
-            recyclerView.setAdapter(mAdapter);
+            RecyclerView mRecyclerView = (RecyclerView) view;
+            mRecyclerView.setLayoutManager(new LinearLayoutManager(context));
+            mAdapter = new QueueItemRecyclerViewAdapter(QueueItems.getITEMS(), mListener, mParentListener);
+            mRecyclerView.setAdapter(mAdapter);
         }
-        mListener.SetTitle("Active downloads");
         return view;
-    }
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        mAdapter = null;
     }
 
 
@@ -90,26 +74,31 @@ public class DownloadsFragment extends Fragment {
         }
     }
 
+    public void onAttachToParentFragment(Fragment fragment)
+    {
+        try
+        {
+            mParentListener = (OnParentFragmentInteractionListener) fragment;
+
+        }
+        catch (ClassCastException e)
+        {
+            throw new ClassCastException(
+                    fragment.toString() + " must implement OnParentFragmentInteractionListener");
+        }
+    }
+
+
     @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        mParentListener=null;
     }
+
     public void RefreshRecyclerView(){
         mAdapter.notifyDataSetChanged();
     }
-
-    public void RemoveItemByDownloadId(String downloadId){
-        DownloadsItem item = DownloadsItems.getITEMbyDownloadId(downloadId);
-        if (item != null){
-            DownloadsItems.getITEMS().remove(item);
-        }
-        if(mAdapter!=null){
-            mAdapter.notifyDataSetChanged();
-        }
-    }
-
-
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -121,14 +110,9 @@ public class DownloadsFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onListFragmentInteraction(DownloadsItem item);
-
-        void SetMainFabVisible(boolean visible);
-        void SetMainFabImage(int imageResource);
-        void SetMainFabListener(View.OnClickListener listener);
-        void RemoveItemByDownloadId(String downloadId);
-        void SetMainProgressDialogVisible(boolean visible);
-        void SetTitle(String title);
+    }
+    public interface OnParentFragmentInteractionListener{
+        void onQueueFragmentInteraction(QueueItem item);
+        void onQueueFragmentRemove(QueueItem item);
     }
 }

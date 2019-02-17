@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_header_subtitle">что-то</string>
+    <string name="nav_header_desc">Навигация</string>
+    <string name="navigation_drawer_open">Открыть панель навигации</string>
+    <string name="navigation_drawer_close">Закрыть панель навигации</string>
+    <string name="action_settings">Настройки</string>
+    <string name="action_download">Скачать</string>
+    <string name="action_manage">Активные загрузки</string>
+    <string name="action_select_all">Выбрать всё</string>
+    <string name="download_start_fragment_text">Вставьте ссылку на плейлист или видео и нажмите «Далее».</string>
+    <string name="action_play">Плеер</string>
+    <string name="select_videos_to_download">Выберите видео для загрузки</string>
+    <string name="incorrect_url">Пожалуйста, введите правильную ссылку на плейлист / видео!</string>
+    <string name="api_error">"Ошибка API YouTube: "</string>
+    <string name="extraction_error">Не удалось получить файл для загрузки, повторите попытку.</string>
+    <string name="please_wait">Пожалуйста, подождите...</string>
+    <string name="play_queue">"Очередь воспроизведения: "</string>
+    <string name="add">Добавить</string>
+    <string name="input_link">Введите ссылку на видео или плейлист:</string>
+    <string name="video_not_found">Видео с этим идентификатором не найдено.</string>
+    <string name="extraction_error_try_again">Не удалось получить файл для загрузки. (Попытка %d)</string>
+</resources>

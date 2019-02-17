@@ -1,26 +1,17 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.download;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 
-import java.util.List;
-
-import ru.mrsmile2114.ytmusic.dummy.PlaylistItems;
-import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
+import ru.mrsmile2114.ytmusic.R;
+import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
+import ru.mrsmile2114.ytmusic.dummy.DownloadsItems.DownloadsItem;
 
 /**
  * A fragment representing a list of Items.
@@ -28,22 +19,22 @@ import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
  */
-public class PlaylistItemsFragment extends Fragment {
+public class DownloadsFragment extends Fragment {
 
-    private OnListFragmentInteractionListener mListener;
-    private PlaylistItemsRecyclerViewAdapter recyclerViewAdapter;
+        private OnListFragmentInteractionListener mListener;
+        private DownloadsRecyclerViewAdapter mAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public PlaylistItemsFragment() {
+    public DownloadsFragment() {
     }
 
-
+    // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
-    public static PlaylistItemsFragment newInstance() {
-        PlaylistItemsFragment fragment = new PlaylistItemsFragment();
+    public static DownloadsFragment newInstance(int columnCount) {
+        DownloadsFragment fragment = new DownloadsFragment();
         //Bundle args = new Bundle();
         //args.putInt(ARG_COLUMN_COUNT, columnCount);
         //fragment.setArguments(args);
@@ -64,32 +55,23 @@ public class PlaylistItemsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.fragment_playlist_item_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_downloads_list, container, false);
 
         // Set the adapter
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerViewAdapter = new PlaylistItemsRecyclerViewAdapter(PlaylistItems.getITEMS(), mListener);
-            recyclerView.setAdapter(recyclerViewAdapter);
+            mAdapter = new DownloadsRecyclerViewAdapter(DownloadsItems.getITEMS(), mListener);
+            recyclerView.setAdapter(mAdapter);
         }
-        mListener.SetMainFabListener(FabList);
-        mListener.SetMainFabImage(R.drawable.ic_menu_download);
-        mListener.SetMainFabVisible(true);
-        mListener.SetMainCheckBoxVisible(true);
-        mListener.SetMainCheckBoxListener(CheckBoxListener);
-        //System.out.println("SUCCESSSSS");//TODO:DELETE
-        mListener.SetTitle("Select videos to download");
+        mListener.SetTitle(getResources().getString(R.string.action_manage));
         return view;
     }
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        recyclerViewAdapter=null;
-        mListener.SetMainCheckBoxVisible(false);
-        mListener.SetMainFabVisible(false);
+        mAdapter = null;
     }
 
 
@@ -109,10 +91,20 @@ public class PlaylistItemsFragment extends Fragment {
         super.onDetach();
         mListener = null;
     }
-
-    public void RefreshRecyclerView() {
-        recyclerViewAdapter.notifyDataSetChanged();
+    public void RefreshRecyclerView(){
+        mAdapter.notifyDataSetChanged();
     }
+
+    public void RemoveItemByDownloadId(String downloadId){
+        DownloadsItem item = DownloadsItems.getITEMbyDownloadId(downloadId);
+        if (item != null){
+            DownloadsItems.getITEMS().remove(item);
+        }
+        if(mAdapter!=null){
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
 
     /**
      * This interface must be implemented by activities that contain this
@@ -126,42 +118,13 @@ public class PlaylistItemsFragment extends Fragment {
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onListFragmentInteraction(PlaylistItem item);
+        void onListFragmentInteraction(DownloadsItem item);
 
         void SetMainFabVisible(boolean visible);
         void SetMainFabImage(int imageResource);
         void SetMainFabListener(View.OnClickListener listener);
+        void RemoveItemByDownloadId(String downloadId, boolean completed);
         void SetMainProgressDialogVisible(boolean visible);
-        void StartAsyncYtExtraction(String url);
         void SetTitle(String title);
-        boolean HaveStoragePermission();
-
-        void SetMainCheckBoxVisible(boolean visible);
-        void SetMainCheckBoxListener(CheckBox.OnCheckedChangeListener listener);
     }
-
-    public final View.OnClickListener FabList = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (mListener.HaveStoragePermission()) {
-                mListener.SetMainProgressDialogVisible(true);
-                List<PlaylistItem> CHECKEDITEMS = PlaylistItems.getCheckedItems();
-                for (int i = 0; i < CHECKEDITEMS.size(); i++) {
-                    mListener.StartAsyncYtExtraction(CHECKEDITEMS.get(i).getUrl());
-                }
-            }
-        }
-    };
-
-
-
-    public final CheckBox.OnCheckedChangeListener CheckBoxListener = new CheckBox.OnCheckedChangeListener(){
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                PlaylistItems.setAllChecked(isChecked);
-                recyclerViewAdapter.notifyDataSetChanged();
-            }
-        };
-
-
 }

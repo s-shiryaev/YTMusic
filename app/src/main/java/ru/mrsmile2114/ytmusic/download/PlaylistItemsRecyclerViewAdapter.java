@@ -1,4 +1,4 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.download;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -11,7 +11,8 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import ru.mrsmile2114.ytmusic.PlaylistItemsFragment.OnListFragmentInteractionListener;
+import ru.mrsmile2114.ytmusic.R;
+import ru.mrsmile2114.ytmusic.download.PlaylistItemsFragment.OnListFragmentInteractionListener;
 import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
 
 import java.util.List;

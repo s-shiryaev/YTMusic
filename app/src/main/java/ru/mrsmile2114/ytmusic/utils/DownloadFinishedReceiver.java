@@ -1,4 +1,4 @@
-package ru.mrsmile2114.ytmusic;
+package ru.mrsmile2114.ytmusic.utils;
 
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
@@ -58,9 +58,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver {
             if (c.moveToFirst()) {
                 int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
                 if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                    //TEST FIX:
                     String inPath = (c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI))).replace("file://","");
-                    //----
                     String dlTitle = c.getString(c.getColumnIndex(DownloadManager.COLUMN_TITLE));
                     c.close();
                     DownloadStatus dlStatus = getMultiFileDlStatus(context, downloadId, inPath);

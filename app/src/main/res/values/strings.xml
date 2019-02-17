@@ -1,14 +1,26 @@
 <resources>
-    <string name="app_name">YTMusic</string>
+    <string name="app_name" translatable="false">YTMusic</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">YTMusic</string>
+    <string name="nav_header_title" translatable="false">YTMusic</string>
     <string name="nav_header_subtitle">something</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
     <string name="action_download">Download</string>
-    <string name="action_manage">Manage downloads</string>
+    <string name="action_manage">Active downloads</string>
     <string name="action_select_all">Select All</string>
 
-    <string name="download_start_fragment_text">Insert a link to the playlist / video and click "Next".</string>
+    <string name="download_start_fragment_text">Insert a link to the playlist or video and click Next.</string>
+    <string name="action_play">Player</string>
+    <string name="select_videos_to_download">Select videos to download</string>
+    <string name="incorrect_url">Please input correct link to the playlist/video!</string>
+    <string name="api_error">"Youtube API Error: "</string>
+    <string name="extraction_error">Failed to get the file to download, please try again</string>
+    <string name="please_wait">Please wait…</string>
+    <string name="play_queue">"Play queue: "</string>
+    <string name="add">Add</string>
+    <string name="input_link">Input the link to the video or playlist:</string>
+    <string name="video_not_found">No video found with this id.</string>
+    <string name="extraction_error_try_again">Failed to get the file to upload. (Attempt %d)</string>
+
 </resources>

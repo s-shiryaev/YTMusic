@@ -33,14 +33,26 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CheckBox;
 
+import com.google.api.services.youtube.model.PlaylistItemListResponse;
+import com.google.api.services.youtube.model.VideoListResponse;
+
+import ru.mrsmile2114.ytmusic.utils.DownloadFinishedReceiver;
+import ru.mrsmile2114.ytmusic.download.DownloadStartFragment;
+import ru.mrsmile2114.ytmusic.download.DownloadsFragment;
+import ru.mrsmile2114.ytmusic.utils.HandlerOnDownloadCancelled;
+import ru.mrsmile2114.ytmusic.download.PlaylistItemsFragment;
 import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
 import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
+import ru.mrsmile2114.ytmusic.player.PlayFragment;
+import ru.mrsmile2114.ytmusic.player.QueueItemFragment;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         PlaylistItemsFragment.OnListFragmentInteractionListener,
         DownloadStartFragment.OnFragmentInteractionListener,
-        DownloadsFragment.OnListFragmentInteractionListener {
+        DownloadsFragment.OnListFragmentInteractionListener,
+        PlayFragment.OnFragmentInteractionListener,
+        QueueItemFragment.OnListFragmentInteractionListener{
 
     private FloatingActionButton fab;
     private NavigationView navigationView;
@@ -59,8 +71,7 @@ public class MainActivity extends AppCompatActivity
         StartContentObserver();
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(FabListMain);
-
+        SetMainFabVisible(false);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -72,30 +83,30 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         navigationView.setCheckedItem(R.id.nav_download);
+        //TODO:MAKE FUNCTION
         mProgressDialog= new ProgressDialog(    this);
         mProgressDialog.setCanceledOnTouchOutside(false);
         mProgressDialog.setCancelable(false);
-        mProgressDialog.setTitle("Please Wait...");
+        mProgressDialog.setTitle(getString(R.string.please_wait));
 
         onDownloadComplete = new DownloadFinishedReceiver(){//create a descendant of a class DownloadFinishedReceiver
             @Override
             public void onReceive(final Context context, Intent intent) {
                 super.onReceive(context,intent);
-                RemoveItemByDownloadId(String.valueOf(intent.getExtras().getLong(DownloadManager.EXTRA_DOWNLOAD_ID)));
+                RemoveItemByDownloadId(String.valueOf(intent.getExtras().getLong(DownloadManager.EXTRA_DOWNLOAD_ID)),true);
             }
 
             @Override
             protected void removeTempOnFailure(Context con, long downloadId) {
                 super.removeTempOnFailure(con, downloadId);
                 Snackbar.make(findViewById(R.id.sample_content_fragment),
-                        "Could not get link. Please try again.", Snackbar.LENGTH_LONG)
+                        getString(R.string.extraction_error), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
 
         };
         registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-        fab.setImageResource(R.drawable.ic_menu_search);
-        GoToFragment(DownloadStartFragment.class);//go to start fragment
+        GoToFragment(PlayFragment.class);//go to start fragment
     }
 
     @Override
@@ -134,7 +145,6 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.action_settings) {
             return true;
         } else if (id == R.id.action_check_box){
-            //System.out.println("OPT SELECTED");
             return true;
         }
 
@@ -146,11 +156,12 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        Class fragmentClass = null;
         if (id == R.id.nav_download) {
             GoToFragment(DownloadStartFragment.class);
         } else if (id == R.id.nav_manage) {
             GoToFragment(DownloadsFragment.class);
+        }else if (id==R.id.nav_play){
+            GoToFragment(PlayFragment.class);
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -163,14 +174,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-
-    public View.OnClickListener FabListMain = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            System.out.println("TEST");
-        }
-    };
-
     public void GoToFragment(Class fragmentclass){//method of transition to the desired fragment
         Fragment fragment;
         if (fragmentclass==DownloadStartFragment.class){//for DownloadStartFragment
@@ -178,11 +181,7 @@ public class MainActivity extends AppCompatActivity
             if (fragment==null) {
                 fragment = new DownloadStartFragment();
             }
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOAD_START");
-            transaction.addToBackStack("FRAGMENT_DOWNLOAD_START");
-            transaction.commit();
-            getSupportFragmentManager().executePendingTransactions();
+            BeginTransaction(fragment,"FRAGMENT_DOWNLOAD_START");
             navigationView.setCheckedItem(R.id.nav_download);
         } else if (fragmentclass==DownloadsFragment.class){//for DownloadsFragment
             fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
@@ -192,11 +191,7 @@ public class MainActivity extends AppCompatActivity
             if (fragment.isVisible()){
                 ((DownloadsFragment)fragment).RefreshRecyclerView();
             }else{
-                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.container, fragment, "FRAGMENT_DOWNLOADS_MANAGE");
-                transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
-                transaction.commit();
-                getSupportFragmentManager().executePendingTransactions();
+                BeginTransaction(fragment,"FRAGMENT_DOWNLOADS_MANAGE");
             }
             navigationView.setCheckedItem(R.id.nav_manage);
         } else if (fragmentclass==PlaylistItemsFragment.class){//for PlaylistItemsFragment
@@ -207,23 +202,37 @@ public class MainActivity extends AppCompatActivity
             if (fragment.isVisible()){
                 ((PlaylistItemsFragment)fragment).RefreshRecyclerView();
             }else{
-                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.container, fragment, "FRAGMENT_PLAYLIST_ITEMS");
-                transaction.addToBackStack("FRAGMENT_PLAYLIST_ITEMS");
-                transaction.commit();
-                getSupportFragmentManager().executePendingTransactions();
+                BeginTransaction(fragment,"FRAGMENT_PLAYLIST_ITEMS");
+
             }
+        } else if (fragmentclass==PlayFragment.class){
+            fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_PLAY");
+            if (fragment==null){
+                fragment = new PlayFragment();
+            }
+            BeginTransaction(fragment,"FRAGMENT_PLAY");
+            navigationView.setCheckedItem(R.id.nav_play);
         }
+    }
+
+    private void BeginTransaction(Fragment fragment, String tag){
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.container, fragment, tag);
+        transaction.addToBackStack(tag);
+        transaction.commit();
+        getSupportFragmentManager().executePendingTransactions();
     }
 
     public void SetMainFabListener(View.OnClickListener listener){ fab.setOnClickListener(listener); }
 
     @Override
-    public void RemoveItemByDownloadId(String downloadId) {
+    public void RemoveItemByDownloadId(String downloadId, boolean completed) {
         DownloadsItems.DownloadsItem item = DownloadsItems.getITEMbyDownloadId(downloadId);
         if (item!=null){
-            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-            manager.remove(Long.parseLong(downloadId));
+            if(!completed){
+                DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                manager.remove(Long.parseLong(downloadId));
+            }
             Fragment fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
             if (fragment == null) {
                 fragment = new DownloadsFragment();
@@ -281,9 +290,6 @@ public class MainActivity extends AppCompatActivity
         return manager.enqueue(request);
     }
 
-    public void StartAsyncYtExtraction(String url){
-        new YTExtractor(this).extract(url, true, true);
-    }
 
     @Override
     public void SetTitle(String title) { setTitle(title); }
@@ -335,5 +341,33 @@ public class MainActivity extends AppCompatActivity
             Log.e("Permission error","You already have the permission");
             return true;
         }
+    }
+
+
+    public ExtractCallBackInterface DownloadExtractCallBackInterface = new ExtractCallBackInterface() {
+        @Override
+        public void onSuccExtract(String url, String parsedUrl, String title) {
+            String filename;
+            if (title.length() > 55) {
+                filename = title.substring(0, 55);
+            } else {
+                filename = title;
+            }
+            filename = filename.replaceAll("[\\\\><\"|*?%:#/]", "");
+            filename += ".m4a";
+            Long downloadId =downloadFromUrl(parsedUrl ,title, filename,false);
+            DownloadsItems.addItem(DownloadsItems.createDummyItem(title, downloadId.toString()));
+            GoToFragment(DownloadsFragment.class);
+        }
+    };
+
+    public interface GetVideoDataCallBackInterface {
+        void onSuccGetVideoData(VideoListResponse response);
+    }
+    public interface ExtractCallBackInterface {
+        void onSuccExtract(String url, String parsedUrl, String title);
+    }
+    public interface GetPlaylistItemsCallBackInterface{
+        void onSuccGetPlaylistItems(PlaylistItemListResponse response);
     }
 }

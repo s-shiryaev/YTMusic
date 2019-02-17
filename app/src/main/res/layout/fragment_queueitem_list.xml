@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/list"
-    android:name="ru.mrsmile2114.ytmusic.DownloadFragment"
+    android:name="ru.mrsmile2114.ytmusic.QueueItemFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginLeft="0dp"
     android:layout_marginRight="0dp"
     app:layoutManager="LinearLayoutManager"
-    tools:context=".download.DownloadsFragment"
-    tools:listitem="@layout/fragment_downloads" />
+    tools:context=".player.QueueItemFragment"
+    tools:listitem="@layout/fragment_queueitem" />

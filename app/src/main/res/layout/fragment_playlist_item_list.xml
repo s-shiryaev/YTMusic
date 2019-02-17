@@ -9,7 +9,7 @@
     android:layout_marginLeft="0dp"
     android:layout_marginRight="0dp"
     app:layoutManager="LinearLayoutManager"
-    tools:context=".PlaylistItemsFragment"
+    tools:context=".download.PlaylistItemsFragment"
     tools:listitem="@layout/fragment_playlist_item">
 
 </android.support.v7.widget.RecyclerView>
