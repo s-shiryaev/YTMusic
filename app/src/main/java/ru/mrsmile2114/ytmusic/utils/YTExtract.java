@@ -47,6 +47,8 @@ public class YTExtract extends YouTubeExtractor {
                     .setAction("Action", null).show();
             if (attempt<maxAttempts){
                 new YTExtract(mActivity.get(),videoUrl,attempt+1,maxAttempts,callbackReference.get()).execute(videoUrl);
+            } else {
+                callbackReference.get().onUnsuccExtract(videoUrl);
             }
         }
     }

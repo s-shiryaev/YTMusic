@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
@@ -19,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.HttpTransport;
@@ -34,6 +36,7 @@ import ru.mrsmile2114.ytmusic.R;
 import ru.mrsmile2114.ytmusic.dummy.QueueItems;
 import ru.mrsmile2114.ytmusic.utils.GetPlaylistItemsAsyncTask;
 import ru.mrsmile2114.ytmusic.utils.GetVideoDataAsyncTask;
+import ru.mrsmile2114.ytmusic.utils.InternetCheck;
 import ru.mrsmile2114.ytmusic.utils.YTExtract;
 
 
@@ -88,11 +91,13 @@ public class PlayFragment extends Fragment implements
         super.onCreate(savedInstanceState);
         queueList = new QueueItemFragment();
         mediaPlayer = new MediaPlayer();
-        mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .setLegacyStreamType(AudioManager.STREAM_MUSIC)
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .build());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setLegacyStreamType(AudioManager.STREAM_MUSIC)
+                   .setUsage(AudioAttributes.USAGE_MEDIA)
+                   .build());
+        }
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
@@ -106,6 +111,38 @@ public class PlayFragment extends Fragment implements
                 mp.start();
                 UpdateQueue();
                 primarySeekBarProgressUpdater();
+            }
+        });
+        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                if ((what==MediaPlayer.MEDIA_ERROR_UNKNOWN)&&(extra==MediaPlayer.MEDIA_ERROR_IO)){
+                    Toast.makeText(getActivity().getApplicationContext(),R.string.player_connection_error,Toast.LENGTH_LONG)
+                            .show();
+                    return true;
+                } else if  ((what==MediaPlayer.MEDIA_ERROR_UNKNOWN)&&(extra==-2147483648)){
+                    new InternetCheck(new InternetCheck.Consumer() {
+                        @Override
+                        public void accept(Boolean internet) {
+                            if (internet){
+                                Toast.makeText(getActivity().getApplicationContext(),R.string.player_datasource_error,Toast.LENGTH_LONG)
+                                        .show();
+                                QueueItems.QueueItem item = QueueItems.getPlayingItem();
+                                if (item!=null){
+                                    item.setExtracting(true);
+                                    new YTExtract(getActivity(), item.getUrl(),1,6,mExtractCallBackInterface)
+                                            .execute(item.getUrl());
+                                    UpdateQueue();
+                                }
+                            } else {
+                                Toast.makeText(getActivity().getApplicationContext(),R.string.player_connection_error,Toast.LENGTH_LONG)
+                                        .show();
+                            }
+                        }
+                    });
+                    return true;
+                }
+                return false;
             }
         });
         mYoutubeDataApi = new YouTube.Builder(mTransport, mJsonFactory, null)
@@ -239,8 +276,17 @@ public class PlayFragment extends Fragment implements
                 }
             }
         });
-        primarySeekBarProgressUpdater();
+        if (mediaPlayer.isPlaying()){
+            primarySeekBarProgressUpdater();
+        }
         return mView;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mediaPlayer.release();
+        mediaPlayer=null;
     }
 
     @Override
@@ -266,7 +312,9 @@ public class PlayFragment extends Fragment implements
         if (mediaPlayer.isPlaying()) {
             Runnable notification = new Runnable() {
                 public void run() {
-                    primarySeekBarProgressUpdater();
+                    if (mediaPlayer!=null){
+                        primarySeekBarProgressUpdater();
+                    }
                 }
             };
             handler.postDelayed(notification, 1000);
@@ -329,6 +377,7 @@ public class PlayFragment extends Fragment implements
             mButtonPlay.setImageResource(R.drawable.ic_media_pause);
             if (isPaused){
                 mediaPlayer.start();
+                isPaused=false;
             } else {
                 QueueItems.QueueItem item = QueueItems.getPlayingItem();
                 if (item!=null){
@@ -376,7 +425,7 @@ public class PlayFragment extends Fragment implements
 
     @Override
     public void onQueueFragmentInteraction(QueueItems.QueueItem item) {
-        if (!item.isPlaying()){
+        if (!item.isPlaying()&&!item.isExtracting()){
             QueueItems.setNextPlayingItem(item);
             UpdateQueue();
             if (isPaused){
@@ -423,6 +472,17 @@ public class PlayFragment extends Fragment implements
                 for(int i=0;i<Items.size();i++){
                     Items.get(i).setParsedUrl(parsedUrl);
                     Items.get(i).setExtracting(false);
+                }
+            }
+            UpdateQueue();
+        }
+
+        @Override
+        public void onUnsuccExtract(String url) {
+            List<QueueItems.QueueItem> Items  = QueueItems.getItemsByUrl(url);
+            if(!(Items.isEmpty())){
+                for(int i=0;i<Items.size();i++){
+                    QueueItems.getITEMS().remove(Items.get(i));
                 }
             }
             UpdateQueue();

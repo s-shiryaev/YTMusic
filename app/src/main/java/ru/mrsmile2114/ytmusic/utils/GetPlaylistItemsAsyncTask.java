@@ -66,9 +66,14 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
         super.onPostExecute(playlistListResponse);
         activityReference.get().SetMainProgressDialogVisible(false);
         if (playlistListResponse==null){
-            Snackbar.make(activityReference.get().getCurrentFocus(),
-                    activityReference.get().getString(R.string.api_error)+e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1),
-                    Snackbar.LENGTH_LONG)
+            String text;
+            if(e.getLocalizedMessage().contains("{")){
+                text=activityReference.get().getString(R.string.api_error)+
+                        e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1);
+            } else {
+                text=activityReference.get().getString(R.string.api_error)+e.getLocalizedMessage();
+            }
+            Snackbar.make(activityReference.get().getCurrentFocus(), text, Snackbar.LENGTH_LONG)
                     .setAction("Action", null)
                     .show();
         } else {

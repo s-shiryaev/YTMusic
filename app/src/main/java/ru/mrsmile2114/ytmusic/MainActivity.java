@@ -32,6 +32,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CheckBox;
+import android.widget.Toast;
 
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.VideoListResponse;
@@ -59,8 +60,14 @@ public class MainActivity extends AppCompatActivity
     private Menu mymenu;
     private ProgressDialog mProgressDialog;
 
+    private DownloadsFragment mDownloadsFragment;
+    private DownloadStartFragment mDownloadStartFragment;
+    private PlaylistItemsFragment mPlaylistItemsFragment;
+    private PlayFragment mPlayFragment;
+
     private final Handler handlerDownload = new HandlerOnDownloadCancelled(this);
     private DownloadFinishedReceiver onDownloadComplete;
+    boolean doubleBackToExitPressedOnce = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +113,12 @@ public class MainActivity extends AppCompatActivity
 
         };
         registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-        GoToFragment(PlayFragment.class);//go to start fragment
+
+        mPlayFragment = new PlayFragment();
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.container, mPlayFragment, "FRAGMENT_PLAY");
+        transaction.commit();
+        navigationView.setCheckedItem(R.id.nav_play);
     }
 
     @Override
@@ -121,7 +133,23 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            if (doubleBackToExitPressedOnce||getSupportFragmentManager().getBackStackEntryCount()!=0) {
+                super.onBackPressed();
+                return;
+            }
+
+            this.doubleBackToExitPressedOnce = true;
+            Snackbar.make(findViewById(R.id.sample_content_fragment),
+                    getString(R.string.press_back), Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+
+            new Handler().postDelayed(new Runnable() {
+
+                @Override
+                public void run() {
+                    doubleBackToExitPressedOnce=false;
+                }
+            }, 2000);
         }
     }
 
@@ -175,42 +203,38 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void GoToFragment(Class fragmentclass){//method of transition to the desired fragment
-        Fragment fragment;
+        //Fragment fragment;
         if (fragmentclass==DownloadStartFragment.class){//for DownloadStartFragment
-            fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOAD_START");
-            if (fragment==null) {
-                fragment = new DownloadStartFragment();
+            if (mDownloadStartFragment==null) {
+                mDownloadStartFragment = new DownloadStartFragment();
             }
-            BeginTransaction(fragment,"FRAGMENT_DOWNLOAD_START");
+            BeginTransaction(mDownloadStartFragment,"FRAGMENT_DOWNLOAD_START");
             navigationView.setCheckedItem(R.id.nav_download);
         } else if (fragmentclass==DownloadsFragment.class){//for DownloadsFragment
-            fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
-            if (fragment==null){
-                fragment = new DownloadsFragment();
+            if (mDownloadsFragment==null){
+                mDownloadsFragment = new DownloadsFragment();
             }
-            if (fragment.isVisible()){
-                ((DownloadsFragment)fragment).RefreshRecyclerView();
+            if (mDownloadsFragment.isVisible()){
+                mDownloadsFragment.RefreshRecyclerView();
             }else{
-                BeginTransaction(fragment,"FRAGMENT_DOWNLOADS_MANAGE");
+                BeginTransaction(mDownloadsFragment,"FRAGMENT_DOWNLOADS_MANAGE");
             }
             navigationView.setCheckedItem(R.id.nav_manage);
         } else if (fragmentclass==PlaylistItemsFragment.class){//for PlaylistItemsFragment
-            fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_PLAYLIST_ITEMS");
-            if (fragment==null){
-                fragment = new PlaylistItemsFragment();
+            if (mPlaylistItemsFragment==null){
+                mPlaylistItemsFragment = new PlaylistItemsFragment();
             }
-            if (fragment.isVisible()){
-                ((PlaylistItemsFragment)fragment).RefreshRecyclerView();
+            if (mPlaylistItemsFragment.isVisible()){
+                mPlaylistItemsFragment.RefreshRecyclerView();
             }else{
-                BeginTransaction(fragment,"FRAGMENT_PLAYLIST_ITEMS");
+                BeginTransaction(mPlaylistItemsFragment,"FRAGMENT_PLAYLIST_ITEMS");
 
             }
         } else if (fragmentclass==PlayFragment.class){
-            fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_PLAY");
-            if (fragment==null){
-                fragment = new PlayFragment();
+            if (mPlayFragment==null){
+                mPlayFragment = new PlayFragment();
             }
-            BeginTransaction(fragment,"FRAGMENT_PLAY");
+            BeginTransaction(mPlayFragment,"FRAGMENT_PLAY");
             navigationView.setCheckedItem(R.id.nav_play);
         }
     }
@@ -359,6 +383,10 @@ public class MainActivity extends AppCompatActivity
             DownloadsItems.addItem(DownloadsItems.createDummyItem(title, downloadId.toString()));
             GoToFragment(DownloadsFragment.class);
         }
+
+        @Override
+        public void onUnsuccExtract(String url) {
+        }
     };
 
     public interface GetVideoDataCallBackInterface {
@@ -366,6 +394,7 @@ public class MainActivity extends AppCompatActivity
     }
     public interface ExtractCallBackInterface {
         void onSuccExtract(String url, String parsedUrl, String title);
+        void onUnsuccExtract(String url);
     }
     public interface GetPlaylistItemsCallBackInterface{
         void onSuccGetPlaylistItems(PlaylistItemListResponse response);

@@ -22,5 +22,8 @@
     <string name="input_link">Input the link to the video or playlist:</string>
     <string name="video_not_found">No video found with this id.</string>
     <string name="extraction_error_try_again">Failed to get the file to upload. (Attempt %d)</string>
+    <string name="player_connection_error">YTMusic: Error. Check your internet connection</string>
+    <string name="player_datasource_error">YTMusic: Error. Trying to get new link...</string>
+    <string name="press_back">Please click BACK again to exit</string>
 
 </resources>

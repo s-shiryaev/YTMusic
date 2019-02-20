@@ -65,10 +65,15 @@ public class GetVideoDataAsyncTask extends AsyncTask<String, Void, VideoListResp
         super.onPostExecute(videoListResponse);
         activityReference.get().SetMainProgressDialogVisible(false);
         if (videoListResponse==null){
+            String text;
+            if(e.getLocalizedMessage().contains("{")){
+                text=activityReference.get().getString(R.string.api_error)+
+                        e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1);
+            } else {
+                text=activityReference.get().getString(R.string.api_error)+e.getLocalizedMessage();
+            }
             if (activityReference.get().getCurrentFocus()!=null) {
-                Snackbar.make(activityReference.get().getCurrentFocus(),
-                        activityReference.get().getString(R.string.api_error) + e.getLocalizedMessage().substring(0, e.getLocalizedMessage().indexOf("{") - 1),
-                        Snackbar.LENGTH_LONG)
+                Snackbar.make(activityReference.get().getCurrentFocus(), text, Snackbar.LENGTH_LONG)
                         .setAction("Action", null)
                         .show();
             }

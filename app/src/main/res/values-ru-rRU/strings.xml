@@ -20,4 +20,7 @@
     <string name="input_link">Введите ссылку на видео или плейлист:</string>
     <string name="video_not_found">Видео с этим идентификатором не найдено.</string>
     <string name="extraction_error_try_again">Не удалось получить файл для загрузки. (Попытка %d)</string>
+    <string name="player_connection_error">YTMusic: Ошибка. Проверьте подключение к интернету.</string>
+    <string name="player_datasource_error">YTMusic: Ошибка. Попытка получить новую ссылку ...</string>
+    <string name="press_back">Нажмите еще раз для выхода</string>
 </resources>
