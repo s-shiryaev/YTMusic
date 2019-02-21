@@ -36,43 +36,62 @@ public class QueueItems {
             if (ITEMS.get(i).isPlaying()){
                 return ITEMS.get(i);
             }
-        }
-        if(ITEMS.size()>0){
-            ITEMS.get(0).setPlaying(true);
-            return ITEMS.get(0);
+        }//Did not find the item being played, return the first readied item
+        for (int i=0;i<ITEMS.size();i++){
+            if (!ITEMS.get(i).isExtracting()){
+                return ITEMS.get(i);
+            }
         }
        return null;
     }
     public static QueueItem setNextPlayingItem(boolean repeat, boolean shuffle){
         if (!shuffle){
-            for (int i=0;i<ITEMS.size()-1;i++) {
-                if (ITEMS.get(i).isPlaying()){
+            boolean found=false;//When we find the track being played, we will start looking for the first link that can be played.
+            for (int i=0;i<ITEMS.size();i++) {
+                if (ITEMS.get(i).isPlaying()&&!found){
                     ITEMS.get(i).setPlaying(false);
-                    ITEMS.get(i+1).setPlaying(true);
-                    return ITEMS.get(i+1);
+                    found=true;
+                } else if (found&&!ITEMS.get(i).isExtracting()){
+                    ITEMS.get(i).setPlaying(true);
+                    return ITEMS.get(i);
                 }
-            }
+            }//Did not find a suitable link, go from the beginning
             if (repeat&&(ITEMS.size()>0)) {
-                ITEMS.get(ITEMS.size() - 1).setPlaying(false);
-                ITEMS.get(0).setPlaying(true);
-                return ITEMS.get(0);
-            }else if((!repeat)&&(ITEMS.size()>0)){
-                ITEMS.get(ITEMS.size() - 1).setPlaying(false);
-                return null;
+               for(int i=0;i<ITEMS.size();i++){
+                   if (!ITEMS.get(i).isExtracting()){
+                       return ITEMS.get(i);
+                   }
+               }
             }
+            return null;//returning null, when queue is ended
         } else if(ITEMS.size()>0){
-            Random rand = new Random();
-            int randInt = rand.nextInt(ITEMS.size());
-            System.out.println("RAND INT: "+randInt);
             for (int i=0;i<ITEMS.size();i++){
                 if (ITEMS.get(i).isPlaying()){
-                    ITEMS.get(i).setPlaying(false);
+                    QueueItem item = getRandomQueueItem(ITEMS.get(i));
+                    if (item!=null){
+                        item.setPlaying(true);
+                        return item;
+                    }
                 }
             }
-            ITEMS.get(randInt).setPlaying(true);
-            return ITEMS.get(randInt);
         }
         return null;
+    }
+    private static QueueItem getRandomQueueItem(QueueItem oldItem){
+        oldItem.setPlaying(false);
+        Random rand = new Random();
+        List<QueueItem> RandomPool = new ArrayList<>(ITEMS);
+        RandomPool.remove(oldItem);
+        int randInt = rand.nextInt(RandomPool.size());
+        while ((RandomPool.get(randInt).isExtracting())&&(RandomPool.size()>0)){
+            RandomPool.remove(randInt);
+            randInt = rand.nextInt(RandomPool.size());
+        }
+        if(RandomPool.size()>0){
+            return RandomPool.get(randInt);
+        } else {
+            return null;
+        }
     }
     public static void setNextPlayingItem (QueueItem item){
         int index = ITEMS.indexOf(item);
