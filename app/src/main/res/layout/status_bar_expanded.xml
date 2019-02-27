@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/notificationbg"
+    android:layout_width="fill_parent"
+    android:layout_height="128.0dip"
+    android:background="@android:color/background_light">
+
+    <ImageView
+        android:id="@+id/status_bar_album_art"
+        android:layout_width="@dimen/notification_expanded_height"
+        android:layout_height="@dimen/notification_expanded_height"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="false"
+        android:foregroundGravity="top|left"
+        android:scaleType="centerCrop"
+        android:src="@drawable/music_logo"
+        app:srcCompat="@drawable/music_logo" />
+
+    <LinearLayout
+        android:id="@+id/buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_toEndOf="@id/status_bar_album_art"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/status_bar_prev"
+            android:layout_width="0.0dip"
+            android:layout_height="48dip"
+            android:layout_weight="1.0"
+            android:background="?android:selectableItemBackground"
+            android:padding="10.0dip"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_media_prev" />
+
+        <ImageButton
+            android:id="@+id/status_bar_play"
+            android:layout_width="0.0dip"
+            android:layout_height="48dp"
+            android:layout_weight="1.0"
+            android:background="?android:selectableItemBackground"
+            android:padding="10.0dip"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_menu_play" />
+
+        <ImageButton
+            android:id="@+id/status_bar_next"
+            android:layout_width="0.0dip"
+            android:layout_height="@dimen/play_controls_notification"
+            android:layout_weight="1.0"
+            android:background="?android:selectableItemBackground"
+            android:padding="10.0dip"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_media_next" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@id/status_bar_collapse"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:background="?android:selectableItemBackground"
+        android:foregroundGravity="center"
+        android:padding="1dp"
+        android:src="@drawable/ic_media_remove_small" />
+
+    <LinearLayout
+        android:id="@+id/textarea"
+        android:layout_width="259dp"
+        android:layout_height="78dp"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center_vertical"
+        android:layout_toStartOf="@id/status_bar_collapse"
+        android:layout_toEndOf="@id/status_bar_album_art"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/notification_padding"
+        android:paddingTop="3dp"
+        android:paddingEnd="@dimen/notification_padding"
+        android:paddingBottom="3dp">
+
+        <TextView
+            android:id="@+id/status_bar_track_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:layout_weight="1"
+            android:ellipsize="marquee"
+            android:fadingEdge="horizontal"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:text=""
+            android:textColor="@android:color/black"
+            android:textSize="18sp">
+
+            <requestFocus />
+        </TextView>
+
+
+    </LinearLayout>
+</RelativeLayout>

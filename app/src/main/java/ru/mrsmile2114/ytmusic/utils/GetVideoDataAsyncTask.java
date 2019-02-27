@@ -1,6 +1,7 @@
 package ru.mrsmile2114.ytmusic.utils;
 
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 
 import com.google.api.services.youtube.YouTube;
@@ -16,26 +17,23 @@ import ru.mrsmile2114.ytmusic.R;
 public class GetVideoDataAsyncTask extends AsyncTask<String, Void, VideoListResponse> {
     private static final String YOUTUBE_PLAYLIST_PART = "snippet,contentDetails";
     private static final String YOUTUBE_PLAYLIST_FIELDS = "items(id,snippet(title,thumbnails),id)";
-    private static final String YOUTUBE_MAX_RESULTS = "25";
+    private static final String YOUTUBE_MAX_RESULTS = "50";
 
     //no memory leak
     private final WeakReference<YouTube> mYouTubeDataApiRef;
-    private WeakReference<MainActivity> activityReference;
-    private WeakReference<MainActivity.GetVideoDataCallBackInterface> callbackReference;
+    private WeakReference<GetVideoDataCallBackInterface> callbackReference;
 
 
     private IOException e;
 
-    public GetVideoDataAsyncTask(YouTube api, MainActivity context, MainActivity.GetVideoDataCallBackInterface callback) {
+    public GetVideoDataAsyncTask(YouTube api, GetVideoDataCallBackInterface callback) {
         this.mYouTubeDataApiRef = new WeakReference<>(api);
-        this.activityReference = new WeakReference<>(context);
         this.callbackReference = new WeakReference<>(callback);
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        activityReference.get().SetMainProgressDialogVisible(true);
     }
 
     @Override
@@ -63,31 +61,24 @@ public class GetVideoDataAsyncTask extends AsyncTask<String, Void, VideoListResp
     @Override
     protected void onPostExecute(VideoListResponse videoListResponse) {
         super.onPostExecute(videoListResponse);
-        activityReference.get().SetMainProgressDialogVisible(false);
         if (videoListResponse==null){
             String text;
             if(e.getLocalizedMessage().contains("{")){
-                text=activityReference.get().getString(R.string.api_error)+
-                        e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1);
+                text=e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1);
             } else {
-                text=activityReference.get().getString(R.string.api_error)+e.getLocalizedMessage();
+                text=e.getLocalizedMessage();
             }
-            if (activityReference.get().getCurrentFocus()!=null) {
-                Snackbar.make(activityReference.get().getCurrentFocus(), text, Snackbar.LENGTH_LONG)
-                        .setAction("Action", null)
-                        .show();
-            }
+            callbackReference.get().onUnsuccGetPlaylisItems(0, text);
         } else if (videoListResponse.getItems().isEmpty()) {
-            if (activityReference.get().getCurrentFocus()!=null){
-                Snackbar.make(activityReference.get().getCurrentFocus(),
-                        activityReference.get().getString(R.string.video_not_found),
-                        Snackbar.LENGTH_LONG)
-                        .setAction("Action", null)
-                        .show();
-            }
+            callbackReference.get().onUnsuccGetPlaylisItems(1, "");
         } else {
             callbackReference.get().onSuccGetVideoData(videoListResponse);
         }
 
+    }
+
+    public interface GetVideoDataCallBackInterface {
+        void onSuccGetVideoData(VideoListResponse response);
+        void onUnsuccGetPlaylisItems(int id, String error);
     }
 }

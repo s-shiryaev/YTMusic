@@ -1,26 +1,25 @@
 package ru.mrsmile2114.ytmusic.player;
 
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.os.Build;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
-import android.widget.Toast;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.HttpTransport;
@@ -31,12 +30,10 @@ import com.google.api.services.youtube.model.VideoListResponse;
 
 import java.util.List;
 
-import ru.mrsmile2114.ytmusic.MainActivity;
 import ru.mrsmile2114.ytmusic.R;
 import ru.mrsmile2114.ytmusic.dummy.QueueItems;
 import ru.mrsmile2114.ytmusic.utils.GetPlaylistItemsAsyncTask;
 import ru.mrsmile2114.ytmusic.utils.GetVideoDataAsyncTask;
-import ru.mrsmile2114.ytmusic.utils.InternetCheck;
 import ru.mrsmile2114.ytmusic.utils.YTExtract;
 
 
@@ -49,7 +46,9 @@ import ru.mrsmile2114.ytmusic.utils.YTExtract;
  * create an instance of this fragment.
  */
 public class PlayFragment extends Fragment implements
-        QueueItemFragment.OnParentFragmentInteractionListener {
+        QueueItemFragment.OnParentFragmentInteractionListener,
+        PlayService.CallBack,
+        ServiceConnection {
 
 
     private OnFragmentInteractionListener mListener;
@@ -67,11 +66,12 @@ public class PlayFragment extends Fragment implements
     private final GsonFactory mJsonFactory = new GsonFactory();
     private final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
 
-    private MediaPlayer mediaPlayer;
     private boolean isPaused,isShuffle;
     private int isRepeat=0;
     private int mediaFileLengthInMilliseconds;
     private final Handler handler = new Handler();
+
+    private PlayService playService;
 
     public PlayFragment() {
         // Required empty public constructor
@@ -90,64 +90,14 @@ public class PlayFragment extends Fragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         queueList = new QueueItemFragment();
-        mediaPlayer = new MediaPlayer();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .setLegacyStreamType(AudioManager.STREAM_MUSIC)
-                   .setUsage(AudioAttributes.USAGE_MEDIA)
-                   .build());
-        }
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                endOfTheSong();
-            }
-        });
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mediaFileLengthInMilliseconds = mp.getDuration();
-                mp.start();
-                UpdateQueue();
-                primarySeekBarProgressUpdater();
-            }
-        });
-        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-            @Override
-            public boolean onError(MediaPlayer mp, int what, int extra) {
-                if ((what==MediaPlayer.MEDIA_ERROR_UNKNOWN)&&(extra==MediaPlayer.MEDIA_ERROR_IO)){
-                    Toast.makeText(getActivity().getApplicationContext(),R.string.player_connection_error,Toast.LENGTH_LONG)
-                            .show();
-                    return true;
-                } else if  ((what==MediaPlayer.MEDIA_ERROR_UNKNOWN)&&(extra==-2147483648)){
-                    new InternetCheck(new InternetCheck.Consumer() {
-                        @Override
-                        public void accept(Boolean internet) {
-                            if (internet){
-                                Toast.makeText(getActivity().getApplicationContext(),R.string.player_datasource_error,Toast.LENGTH_LONG)
-                                        .show();
-                                QueueItems.QueueItem item = QueueItems.getPlayingItem();
-                                if (item!=null){
-                                    item.setExtracting(true);
-                                    new YTExtract(getActivity(), item.getUrl(),1,6,mExtractCallBackInterface)
-                                            .execute(item.getUrl());
-                                    UpdateQueue();
-                                }
-                            } else {
-                                Toast.makeText(getActivity().getApplicationContext(),R.string.player_connection_error,Toast.LENGTH_LONG)
-                                        .show();
-                            }
-                        }
-                    });
-                    return true;
-                }
-                return false;
-            }
-        });
         mYoutubeDataApi = new YouTube.Builder(mTransport, mJsonFactory, null)
                 .setApplicationName(getString(R.string.app_name))
                 .build();
+
+        Intent serviceIntent = new Intent(getContext(), PlayService.class);
+        serviceIntent.setAction("ru.mrsmile2114.ytmusic.player.action.init");
+        //getActivity().startService(serviceIntent);
+        getActivity().bindService(serviceIntent, this,Context.BIND_AUTO_CREATE);
         setRetainInstance(true);
     }
 
@@ -159,57 +109,17 @@ public class PlayFragment extends Fragment implements
         mButtonNext = mView.findViewById(R.id.imageButtonNext);
         mButtonPrev = mView.findViewById(R.id.imageButtonPrev);
         mButtonRepeat = mView.findViewById(R.id.imageButtonRepeat);
-        if (isRepeat==1) {
-            mButtonRepeat.setImageResource(R.drawable.ic_media_repeat_one);
-        } else if (isRepeat==2){
-            mButtonRepeat.setImageResource(R.drawable.ic_media_repeat_all);
-        }
         mButtonShuffle = mView.findViewById(R.id.imageButtonShuffle);
-        if(isShuffle){
-            mButtonShuffle.setImageResource(R.drawable.ic_media_shuffle_enabled);
-        }
         mListener.SetTitle(getString(R.string.action_play));
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.replace(R.id.frame_layout_play,queueList);
         transaction.commit();
         mSeekBar=mView.findViewById(R.id.seekBar);
-        mSeekBar.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (v.getId() == R.id.seekBar) {
-                    if (mediaPlayer.isPlaying()) {
-                        SeekBar sb = (SeekBar) v;
-                        int playPositionInMilliseconds = (mediaFileLengthInMilliseconds / 100)
-                                * sb.getProgress();
-                        mediaPlayer.seekTo(playPositionInMilliseconds);
-                    }
-                }
-                return false;
-            }
-        });
-        mediaPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
-            @Override
-            public void onBufferingUpdate(MediaPlayer mp, int percent) {
-                mSeekBar.setSecondaryProgress(percent);
-            }
-        });
         mButtonPlay=mView.findViewById(R.id.imageButtonPlay);
-        if(mediaPlayer.isPlaying()){
-            mButtonPlay.setImageResource(R.drawable.ic_media_pause);
-        }
         mButtonPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (QueueItems.getPlayingItem()!=null){
-                    if(!mediaPlayer.isPlaying()){
-                        PlayBackMusic();
-                    } else {
-                        mediaPlayer.pause();
-                        isPaused=true;
-                        mButtonPlay.setImageResource(R.drawable.ic_menu_play);
-                    }
-                    primarySeekBarProgressUpdater();
-                }
+                playService.Play();
             }
         });
         mButtonAdd=mView.findViewById(R.id.imageButtonAdd);
@@ -222,25 +132,13 @@ public class PlayFragment extends Fragment implements
         mButtonNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mediaPlayer.stop();
-                if (QueueItems.setNextPlayingItem(false, false)!=null) {
-                    PlayBackMusic();
-                } else {
-                mButtonPlay.setImageResource(R.drawable.ic_menu_play);
-                }
-                UpdateQueue();
+               playService.Next();
             }
         });
         mButtonPrev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mediaPlayer.stop();
-                if (QueueItems.setPrevPlayingItem(false)!=null) {
-                    PlayBackMusic();
-                } else {
-                    mButtonPlay.setImageResource(R.drawable.ic_menu_play);
-                }
-                UpdateQueue();
+                playService.Prev();
             }
         });
         mButtonRepeat.setOnClickListener(new View.OnClickListener() {
@@ -260,8 +158,10 @@ public class PlayFragment extends Fragment implements
                     case 2:{
                         isRepeat=0;
                         mButtonRepeat.setImageResource(R.drawable.ic_media_repeat);
+                        break;
                     }
                 }
+                playService.isRepeat=isRepeat;
             }
         });
         mButtonShuffle.setOnClickListener(new View.OnClickListener() {
@@ -274,10 +174,16 @@ public class PlayFragment extends Fragment implements
                     isShuffle=false;
                     mButtonShuffle.setImageResource(R.drawable.ic_media_shuffle);
                 }
+                playService.isShuffle=isShuffle;
             }
         });
-        if (mediaPlayer.isPlaying()){
-            primarySeekBarProgressUpdater();
+
+        if (playService==null){
+            Intent serviceIntent = new Intent(getContext(), PlayService.class);
+            serviceIntent.setAction("ru.mrsmile2114.ytmusic.player.action.bind");
+            getActivity().bindService(serviceIntent, this,Context.BIND_IMPORTANT);
+        } else {
+            initFromService();
         }
         return mView;
     }
@@ -285,8 +191,9 @@ public class PlayFragment extends Fragment implements
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mediaPlayer.release();
-        mediaPlayer=null;
+        Intent serviceIntent = new Intent(getContext(), PlayService.class);
+        serviceIntent.setAction("ru.mrsmile2114.ytmusic.player.action.close");
+        getActivity().stopService(serviceIntent);
     }
 
     @Override
@@ -306,21 +213,7 @@ public class PlayFragment extends Fragment implements
         mListener = null;
     }
 
-    private void primarySeekBarProgressUpdater() {
-        mSeekBar.setProgress((int) (((float) mediaPlayer
-                .getCurrentPosition() / mediaFileLengthInMilliseconds) * 100));
-        if (mediaPlayer.isPlaying()) {
-            Runnable notification = new Runnable() {
-                public void run() {
-                    if (mediaPlayer!=null){
-                        primarySeekBarProgressUpdater();
-                    }
-                }
-            };
-            handler.postDelayed(notification, 1000);
-        }
-    }
-
+    @Override
     public void UpdateQueue(){
         ((QueueItemFragment)queueList).RefreshRecyclerView();
     }
@@ -342,7 +235,8 @@ public class PlayFragment extends Fragment implements
                     if (s.contains("www.youtube.com/playlist?list=")){
                         s=s.copyValueOf(s.toCharArray(),s.indexOf("=")+1,
                                 s.length()-s.indexOf("=")-1);//get playlist id
-                        new GetPlaylistItemsAsyncTask(mYoutubeDataApi,(MainActivity) getActivity(),
+                        mListener.SetMainProgressDialogVisible(true);
+                        new GetPlaylistItemsAsyncTask(mYoutubeDataApi,
                                 mGetPlaylistItemsCallBackInterface).execute(s);
                     } else {
                         if(s.contains("youtube.com/watch?v=")){
@@ -352,8 +246,9 @@ public class PlayFragment extends Fragment implements
                             s=s.copyValueOf(s.toCharArray(),s.lastIndexOf("/")+1,
                                     s.length()-s.lastIndexOf("/")-1);
                         }
-                        new GetVideoDataAsyncTask(mYoutubeDataApi, (MainActivity) getActivity(),
-                                mGetVideoDataCallBackInterface).execute(s);
+                        mListener.SetMainProgressDialogVisible(true);
+                        new GetVideoDataAsyncTask(mYoutubeDataApi, mGetVideoDataCallBackInterface)
+                                .execute(s);
                     }
 
                 }else {
@@ -372,88 +267,65 @@ public class PlayFragment extends Fragment implements
         builder.show();
     }
 
-    public void PlayBackMusic(){
-        try{
-            mButtonPlay.setImageResource(R.drawable.ic_media_pause);
-            if (isPaused){
-                mediaPlayer.start();
-                isPaused=false;
-            } else {
-                QueueItems.QueueItem item = QueueItems.getPlayingItem();
-                if (item!=null){
-                    mediaPlayer.reset();
-                    mediaPlayer.setDataSource(item.getParsedUrl());
-                    //System.out.println("DEBUG "+item.getTitle());
-                    mediaPlayer.prepareAsync();
-                } else {
-                    mButtonPlay.setImageResource(R.drawable.ic_menu_play);
-                }
-
-            }
-        }catch(Exception e){
-            mButtonPlay.setImageResource(R.drawable.ic_menu_play);
-            e.printStackTrace();
-        }
-    }
-
-
-    public void endOfTheSong() {
-        if (isRepeat == 1) {
-            mediaPlayer.seekTo(0);
-            mediaPlayer.start();
-        } else {
-            nextSong();
-        }
-    }
-
-    public void nextSong(){
-        if (isRepeat==2){
-            if (QueueItems.setNextPlayingItem(true, isShuffle)!=null){
-                PlayBackMusic();
-            } else {
-                mButtonPlay.setImageResource(R.drawable.ic_menu_play);
-            }
-        } else {
-            if (QueueItems.setNextPlayingItem(false, isShuffle)!=null){
-                PlayBackMusic();
-            } else {
-                mButtonPlay.setImageResource(R.drawable.ic_menu_play);
-            }
-        }
-        UpdateQueue();
-    }
-
     @Override
     public void onQueueFragmentInteraction(QueueItems.QueueItem item) {
-        if (!item.isPlaying()&&!item.isExtracting()){
-            QueueItems.setNextPlayingItem(item);
-            UpdateQueue();
-            if (isPaused){
-                mediaPlayer.stop();
-                isPaused=false;
-            }
-            PlayBackMusic();
-        }
+        playService.QueueItemInteraction(item);
+
     }
 
     @Override
     public void onQueueFragmentRemove(QueueItems.QueueItem item) {
-        QueueItems.removeQueueItem(item);
-        if (item.isPlaying()){
-            mediaPlayer.stop();
+       playService.QueueItemRemove(item);
+    }
+
+    @Override
+    public void PressPlay(boolean play) {
+        if(play){
+            mButtonPlay.setImageResource(R.drawable.ic_media_pause);
+        } else {
             mButtonPlay.setImageResource(R.drawable.ic_menu_play);
         }
-        UpdateQueue();
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        playService = ((PlayService.MyBinder)service).getService();
+        playService.setCallBack(this);
+        initFromService();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        playService=null;
+    }
+
+    private void initFromService(){
+        isPaused=playService.isPaused;
+        isRepeat=playService.isRepeat;
+        isShuffle=playService.isShuffle;
+        PressPlay(playService.isMediaPlayerPlaying());
+
+        playService.setProgressBar(mSeekBar);
+        switch (isRepeat){
+            case 0: mButtonRepeat.setImageResource(R.drawable.ic_media_repeat); break;
+            case 1: mButtonRepeat.setImageResource(R.drawable.ic_media_repeat_one); break;
+            case 2: mButtonRepeat.setImageResource(R.drawable.ic_media_repeat_all); break;
+        }
+        if (isShuffle) {
+            mButtonShuffle.setImageResource(R.drawable.ic_media_shuffle_enabled);
+        }
     }
 
 
     public interface OnFragmentInteractionListener {
+        void SetMainProgressDialogVisible(boolean visible);
         void SetTitle(String title);
     }
 
-    private MainActivity.GetVideoDataCallBackInterface mGetVideoDataCallBackInterface = new MainActivity.GetVideoDataCallBackInterface() {
+    private GetVideoDataAsyncTask.GetVideoDataCallBackInterface mGetVideoDataCallBackInterface = new GetVideoDataAsyncTask.GetVideoDataCallBackInterface() {
         @Override
         public void onSuccGetVideoData(VideoListResponse response) {
+            mListener.SetMainProgressDialogVisible(false);
             QueueItems.QueueItem item = new QueueItems.QueueItem(
                     response.getItems().get(0).getSnippet().getTitle(),
                     response.getItems().get(0).getId());
@@ -462,9 +334,24 @@ public class PlayFragment extends Fragment implements
             new YTExtract(getActivity(),item.getUrl(), 1, 6, mExtractCallBackInterface)
                     .execute(item.getUrl());
         }
+
+        @Override
+        public void onUnsuccGetPlaylisItems(int id, String error) {
+            mListener.SetMainProgressDialogVisible(false);
+            if (id==1){
+                Snackbar.make(mView,getString(R.string.video_not_found)+error, Snackbar.LENGTH_LONG)
+                        .setAction("Action", null)
+                        .show();
+            } else {
+                Snackbar.make(mView,getString(R.string.api_error)+error, Snackbar.LENGTH_LONG)
+                        .setAction("Action", null)
+                        .show();
+            }
+
+        }
     };
 
-    private MainActivity.ExtractCallBackInterface mExtractCallBackInterface = new MainActivity.ExtractCallBackInterface() {
+    private YTExtract.ExtractCallBackInterface mExtractCallBackInterface = new YTExtract.ExtractCallBackInterface() {
         @Override
         public void onSuccExtract(String url, String parsedUrl, String title) {
             List<QueueItems.QueueItem> Items  = QueueItems.getItemsByUrl(url);
@@ -478,7 +365,18 @@ public class PlayFragment extends Fragment implements
         }
 
         @Override
+        public void onUnsuccExtractTryAgain(int attempt) {
+            mListener.SetMainProgressDialogVisible(false);
+            Snackbar.make(mView, String.format(
+                    getString(R.string.extraction_error_try_again),
+                    attempt),
+                    Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+        }
+
+        @Override
         public void onUnsuccExtract(String url) {
+            mListener.SetMainProgressDialogVisible(false);
             List<QueueItems.QueueItem> Items  = QueueItems.getItemsByUrl(url);
             if(!(Items.isEmpty())){
                 for(int i=0;i<Items.size();i++){
@@ -489,9 +387,11 @@ public class PlayFragment extends Fragment implements
         }
     };
 
-    private MainActivity.GetPlaylistItemsCallBackInterface mGetPlaylistItemsCallBackInterface = new MainActivity.GetPlaylistItemsCallBackInterface() {
+    private GetPlaylistItemsAsyncTask.GetPlaylistItemsCallBackInterface mGetPlaylistItemsCallBackInterface
+            = new GetPlaylistItemsAsyncTask.GetPlaylistItemsCallBackInterface() {
         @Override
         public void onSuccGetPlaylistItems(PlaylistItemListResponse response) {
+            mListener.SetMainProgressDialogVisible(false);
             for(int i=0;i<response.getItems().size();i++) {
                 QueueItems.QueueItem item = new QueueItems.QueueItem(
                         response.getItems().get(i).getSnippet().getTitle(),
@@ -501,6 +401,14 @@ public class PlayFragment extends Fragment implements
                         .execute(item.getUrl());
             }
             UpdateQueue();
+        }
+
+        @Override
+        public void onUnsuccGetPlaylisItems(String error) {
+            mListener.SetMainProgressDialogVisible(false);
+            Snackbar.make(mView,getString(R.string.api_error)+error, Snackbar.LENGTH_LONG)
+                    .setAction("Action", null)
+                    .show();
         }
     };
 

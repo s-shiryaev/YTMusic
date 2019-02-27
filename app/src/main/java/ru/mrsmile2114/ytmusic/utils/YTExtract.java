@@ -15,16 +15,16 @@ import ru.mrsmile2114.ytmusic.R;
 
 public class YTExtract extends YouTubeExtractor {
 
-    private final WeakReference<MainActivity> mActivity;
+    private WeakReference<Context> con;
     private int attempt;
     private int maxAttempts;
     private String videoUrl;
-    private WeakReference<MainActivity.ExtractCallBackInterface> callbackReference;
+    private WeakReference<ExtractCallBackInterface> callbackReference;
 
     public YTExtract(@NonNull Context con, String videoUrl, int attempt, int maxAttempts,
-                     MainActivity.ExtractCallBackInterface callBack) {
+                     ExtractCallBackInterface callBack) {
         super(con);
-        mActivity=new WeakReference<MainActivity>((MainActivity)con);
+        this.con=new WeakReference<>(con);
         this.attempt=attempt;
         this.videoUrl=videoUrl;
         this.maxAttempts=maxAttempts;
@@ -34,22 +34,22 @@ public class YTExtract extends YouTubeExtractor {
     @Override
     protected void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta vMeta) {
         int itag = 140;
-        mActivity.get().SetMainProgressDialogVisible(false);
         if (ytFiles!=null){
             String parsedUrl = ytFiles.get(itag).getUrl();
             callbackReference.get().onSuccExtract(videoUrl,parsedUrl,vMeta.getTitle());
         } else {
-            Snackbar.make(mActivity.get().findViewById(R.id.sample_content_fragment),
-                    String.format(
-                            mActivity.get().getString(R.string.extraction_error_try_again),
-                            attempt),
-                    Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
+            callbackReference.get().onUnsuccExtractTryAgain(attempt);
             if (attempt<maxAttempts){
-                new YTExtract(mActivity.get(),videoUrl,attempt+1,maxAttempts,callbackReference.get()).execute(videoUrl);
+                new YTExtract(con.get(),videoUrl,attempt+1,maxAttempts,callbackReference.get()).execute(videoUrl);
             } else {
                 callbackReference.get().onUnsuccExtract(videoUrl);
             }
         }
+    }
+
+    public interface ExtractCallBackInterface {
+        void onSuccExtract(String url, String parsedUrl, String title);
+        void onUnsuccExtractTryAgain(int attempt);
+        void onUnsuccExtract(String url);
     }
 }

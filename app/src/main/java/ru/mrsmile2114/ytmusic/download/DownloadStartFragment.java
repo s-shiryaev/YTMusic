@@ -132,7 +132,8 @@ public class DownloadStartFragment extends Fragment {
                 if (s.contains("www.youtube.com/playlist?list=")){
                     s=s.copyValueOf(s.toCharArray(),s.indexOf("=")+1,s.length()-s.indexOf("=")-1);//get playlist id
                     //STARTING REQUEST TO API
-                    new GetPlaylistItemsAsyncTask(mYoutubeDataApi,(MainActivity)getActivity(),
+                    mListener.SetMainProgressDialogVisible(true);
+                    new GetPlaylistItemsAsyncTask(mYoutubeDataApi,
                             mGetPlaylistItemsCallBackInterface).execute(s);
                 } else {
                     if (mListener.HaveStoragePermission()){
@@ -150,11 +151,11 @@ public class DownloadStartFragment extends Fragment {
         }
     };
 
-    private MainActivity.GetPlaylistItemsCallBackInterface mGetPlaylistItemsCallBackInterface
-            = new MainActivity.GetPlaylistItemsCallBackInterface() {
+    private GetPlaylistItemsAsyncTask.GetPlaylistItemsCallBackInterface mGetPlaylistItemsCallBackInterface
+            = new GetPlaylistItemsAsyncTask.GetPlaylistItemsCallBackInterface() {
         @Override
         public void onSuccGetPlaylistItems(PlaylistItemListResponse response) {
-
+                mListener.SetMainProgressDialogVisible(false);
                 PlaylistItems.clearItems();//delete data
                 for(int i=0;i<response.getItems().size();i++) {
                     PlaylistItems.addItem(PlaylistItems.createDummyItem(
@@ -163,6 +164,14 @@ public class DownloadStartFragment extends Fragment {
                             response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl()));
                 }
             ((MainActivity)getActivity()).GoToFragment(PlaylistItemsFragment.class);
+        }
+
+        @Override
+        public void onUnsuccGetPlaylisItems(String error) {
+            mListener.SetMainProgressDialogVisible(false);
+            Snackbar.make(mView,getString(R.string.api_error)+error, Snackbar.LENGTH_LONG)
+                    .setAction("Action", null)
+                    .show();
         }
     };
 

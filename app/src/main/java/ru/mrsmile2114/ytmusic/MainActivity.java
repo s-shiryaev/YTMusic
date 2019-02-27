@@ -32,10 +32,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CheckBox;
-import android.widget.Toast;
-
-import com.google.api.services.youtube.model.PlaylistItemListResponse;
-import com.google.api.services.youtube.model.VideoListResponse;
 
 import ru.mrsmile2114.ytmusic.utils.DownloadFinishedReceiver;
 import ru.mrsmile2114.ytmusic.download.DownloadStartFragment;
@@ -46,6 +42,7 @@ import ru.mrsmile2114.ytmusic.dummy.DownloadsItems;
 import ru.mrsmile2114.ytmusic.dummy.PlaylistItems.PlaylistItem;
 import ru.mrsmile2114.ytmusic.player.PlayFragment;
 import ru.mrsmile2114.ytmusic.player.QueueItemFragment;
+import ru.mrsmile2114.ytmusic.utils.YTExtract;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -113,11 +110,12 @@ public class MainActivity extends AppCompatActivity
 
         };
         registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-
-        mPlayFragment = new PlayFragment();
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.container, mPlayFragment, "FRAGMENT_PLAY");
-        transaction.commit();
+        if (mPlayFragment==null){
+            mPlayFragment = new PlayFragment();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.container, mPlayFragment, "FRAGMENT_PLAY");
+            transaction.commit();
+        }
         navigationView.setCheckedItem(R.id.nav_play);
     }
 
@@ -257,14 +255,13 @@ public class MainActivity extends AppCompatActivity
                 DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
                 manager.remove(Long.parseLong(downloadId));
             }
-            Fragment fragment = getSupportFragmentManager().findFragmentByTag("FRAGMENT_DOWNLOADS_MANAGE");
-            if (fragment == null) {
-                fragment = new DownloadsFragment();
+            if (mDownloadsFragment == null) {
+                mDownloadsFragment = new DownloadsFragment();
                 FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
                 transaction.addToBackStack("FRAGMENT_DOWNLOADS_MANAGE");
                 transaction.commit();
             }
-            ((DownloadsFragment) fragment).RemoveItemByDownloadId(downloadId);
+            mDownloadsFragment.RemoveItemByDownloadId(downloadId);
         }
     }
 
@@ -291,11 +288,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             mProgressDialog.dismiss();
         }
-    }
-
-    @Override
-    public void onListFragmentInteraction(DownloadsItems.DownloadsItem item) {
-
     }
 
     public long downloadFromUrl(String youtubeDlUrl, String downloadTitle, String fileName, boolean hide) {
@@ -368,9 +360,10 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public ExtractCallBackInterface DownloadExtractCallBackInterface = new ExtractCallBackInterface() {
+    public YTExtract.ExtractCallBackInterface DownloadExtractCallBackInterface = new YTExtract.ExtractCallBackInterface() {
         @Override
         public void onSuccExtract(String url, String parsedUrl, String title) {
+            SetMainProgressDialogVisible(false);
             String filename;
             if (title.length() > 55) {
                 filename = title.substring(0, 55);
@@ -385,18 +378,19 @@ public class MainActivity extends AppCompatActivity
         }
 
         @Override
+        public void onUnsuccExtractTryAgain( int attempt) {
+            SetMainProgressDialogVisible(false);
+            Snackbar.make(findViewById(R.id.container), String.format(
+                            getString(R.string.extraction_error_try_again),
+                            attempt),
+                    Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+
+        }
+
+        @Override
         public void onUnsuccExtract(String url) {
         }
     };
 
-    public interface GetVideoDataCallBackInterface {
-        void onSuccGetVideoData(VideoListResponse response);
-    }
-    public interface ExtractCallBackInterface {
-        void onSuccExtract(String url, String parsedUrl, String title);
-        void onUnsuccExtract(String url);
-    }
-    public interface GetPlaylistItemsCallBackInterface{
-        void onSuccGetPlaylistItems(PlaylistItemListResponse response);
-    }
 }

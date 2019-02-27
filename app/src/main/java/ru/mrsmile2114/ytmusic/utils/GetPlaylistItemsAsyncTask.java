@@ -11,30 +11,26 @@ import java.lang.ref.WeakReference;
 import ru.mrsmile2114.ytmusic.AppConstants;
 import ru.mrsmile2114.ytmusic.MainActivity;
 import ru.mrsmile2114.ytmusic.R;
-import ru.mrsmile2114.ytmusic.dummy.PlaylistItems;
 
 public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistItemListResponse> {
     private static final String YOUTUBE_PLAYLIST_PART = "snippet,contentDetails";
     private static final String YOUTUBE_PLAYLIST_FIELDS = "items(id,snippet(title,thumbnails),contentDetails(videoId))";
-    private static final String YOUTUBE_MAX_RESULTS = "25";
+    private static final String YOUTUBE_MAX_RESULTS = "50";
 
     //no memory leak
     private final WeakReference<YouTube> mYouTubeDataApiRef;
-    private WeakReference<MainActivity> activityReference;
-    private WeakReference<MainActivity.GetPlaylistItemsCallBackInterface> callbackReference;
+    private WeakReference<GetPlaylistItemsCallBackInterface> callbackReference;
 
     private IOException e;
 
-    public GetPlaylistItemsAsyncTask(YouTube api, MainActivity context, MainActivity.GetPlaylistItemsCallBackInterface callback) {
+    public GetPlaylistItemsAsyncTask(YouTube api, GetPlaylistItemsCallBackInterface callback) {
         this.mYouTubeDataApiRef = new WeakReference<YouTube>(api);
-        this.activityReference = new WeakReference<>(context);
         this.callbackReference = new WeakReference<>(callback);
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        activityReference.get().SetMainProgressDialogVisible(true);
     }
 
     @Override
@@ -64,20 +60,21 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
     @Override
     protected void onPostExecute(PlaylistItemListResponse playlistListResponse) {
         super.onPostExecute(playlistListResponse);
-        activityReference.get().SetMainProgressDialogVisible(false);
         if (playlistListResponse==null){
             String text;
             if(e.getLocalizedMessage().contains("{")){
-                text=activityReference.get().getString(R.string.api_error)+
-                        e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1);
+                text=e.getLocalizedMessage().substring(0,e.getLocalizedMessage().indexOf("{")-1);
             } else {
-                text=activityReference.get().getString(R.string.api_error)+e.getLocalizedMessage();
+                text=e.getLocalizedMessage();
             }
-            Snackbar.make(activityReference.get().getCurrentFocus(), text, Snackbar.LENGTH_LONG)
-                    .setAction("Action", null)
-                    .show();
+            callbackReference.get().onUnsuccGetPlaylisItems(text);
         } else {
             callbackReference.get().onSuccGetPlaylistItems(playlistListResponse);
         }
+    }
+
+    public interface GetPlaylistItemsCallBackInterface{
+        void onSuccGetPlaylistItems(PlaylistItemListResponse response);
+        void onUnsuccGetPlaylisItems(String error);
     }
 }

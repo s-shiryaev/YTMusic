@@ -117,9 +117,6 @@ public class DownloadsFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onListFragmentInteraction(DownloadsItem item);
-
         void SetMainFabVisible(boolean visible);
         void SetMainFabImage(int imageResource);
         void SetMainFabListener(View.OnClickListener listener);

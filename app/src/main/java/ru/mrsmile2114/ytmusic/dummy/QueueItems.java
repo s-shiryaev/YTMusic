@@ -39,6 +39,7 @@ public class QueueItems {
         }//Did not find the item being played, return the first readied item
         for (int i=0;i<ITEMS.size();i++){
             if (!ITEMS.get(i).isExtracting()){
+                ITEMS.get(i).setPlaying(true);
                 return ITEMS.get(i);
             }
         }
