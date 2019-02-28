@@ -81,14 +81,15 @@ public class QueueItems {
     private static QueueItem getRandomQueueItem(QueueItem oldItem){
         oldItem.setPlaying(false);
         Random rand = new Random();
-        List<QueueItem> RandomPool = new ArrayList<>(ITEMS);
-        RandomPool.remove(oldItem);
-        int randInt = rand.nextInt(RandomPool.size());
-        while ((RandomPool.get(randInt).isExtracting())&&(RandomPool.size()>0)){
-            RandomPool.remove(randInt);
-            randInt = rand.nextInt(RandomPool.size());
+        List<QueueItem> RandomPool = new ArrayList<QueueItem>();
+        for (int i=0;i<ITEMS.size();i++){
+            if(!(ITEMS.get(i).isExtracting())){
+                RandomPool.add(ITEMS.get(i));
+            }
         }
+        RandomPool.remove(oldItem);
         if(RandomPool.size()>0){
+            int randInt = rand.nextInt(RandomPool.size());
             return RandomPool.get(randInt);
         } else {
             return null;

@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="100dp"
+    android:background="@android:color/background_light"
     android:orientation="horizontal">
 
     <ImageView
@@ -9,6 +10,7 @@
         android:layout_width="85dp"
         android:layout_height="match_parent"
         android:gravity="center"
+        android:paddingStart="1dp"
         android:scaleType="fitCenter" />
 
     <LinearLayout
@@ -25,6 +27,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:gravity="center_vertical"
+            android:paddingStart="1dp"
             android:textColor="@android:color/black"
             android:textSize="16sp" />
 

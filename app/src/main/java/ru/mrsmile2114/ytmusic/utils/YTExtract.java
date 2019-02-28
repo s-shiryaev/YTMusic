@@ -2,7 +2,6 @@ package ru.mrsmile2114.ytmusic.utils;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.util.SparseArray;
 
 import java.lang.ref.WeakReference;
@@ -10,8 +9,6 @@ import java.lang.ref.WeakReference;
 import at.huber.youtubeExtractor.VideoMeta;
 import at.huber.youtubeExtractor.YouTubeExtractor;
 import at.huber.youtubeExtractor.YtFile;
-import ru.mrsmile2114.ytmusic.MainActivity;
-import ru.mrsmile2114.ytmusic.R;
 
 public class YTExtract extends YouTubeExtractor {
 
