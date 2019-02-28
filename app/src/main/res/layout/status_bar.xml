@@ -6,17 +6,10 @@
 
     <ImageView
         android:id="@+id/status_bar_album_art"
-        android:layout_width="@dimen/status_bar_album_art"
-        android:layout_height="@dimen/status_bar_album_art"
-        android:gravity="center" />
-
-    <ImageView
-        android:id="@+id/status_bar_icon"
-        android:layout_width="@dimen/status_bar_album_art"
-        android:layout_height="@dimen/status_bar_album_art"
-        android:scaleType="center"
-        android:src="@mipmap/ic_launcher"
-        android:visibility="gone" />
+        android:layout_width="85dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:scaleType="fitCenter" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -24,7 +17,7 @@
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:paddingLeft="@dimen/status_bar_button_info_container_padding_left">
+        android:paddingLeft="2dp">
 
         <TextView
             android:id="@+id/status_bar_track_name"
@@ -38,8 +31,16 @@
     </LinearLayout>
 
     <ImageButton
+        android:id="@+id/status_bar_prev"
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="?android:selectableItemBackground"
+        android:src="@drawable/ic_media_prev" />
+
+    <ImageButton
         android:id="@+id/status_bar_play"
-        android:layout_width="50dp"
+        android:layout_width="45dp"
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:background="?android:selectableItemBackground"
@@ -47,18 +48,10 @@
 
     <ImageButton
         android:id="@+id/status_bar_next"
-        android:layout_width="50dp"
+        android:layout_width="40dp"
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:background="?android:selectableItemBackground"
         android:src="@drawable/ic_media_next" />
-
-    <ImageButton
-        android:id="@+id/status_bar_collapse"
-        android:layout_width="30dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:background="?android:selectableItemBackground"
-        android:src="@drawable/ic_media_remove_small" />
 
 </LinearLayout>

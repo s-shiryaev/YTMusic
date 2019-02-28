@@ -1,6 +1,5 @@
 package ru.mrsmile2114.ytmusic.player;
 
-import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -16,12 +15,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.Toast;
@@ -31,13 +28,13 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
 import ru.mrsmile2114.ytmusic.R;
 import ru.mrsmile2114.ytmusic.dummy.QueueItems;
 import ru.mrsmile2114.ytmusic.utils.GetPlaylistItemsAsyncTask;
-import ru.mrsmile2114.ytmusic.utils.GetVideoDataAsyncTask;
 import ru.mrsmile2114.ytmusic.utils.InternetCheck;
 import ru.mrsmile2114.ytmusic.utils.YTExtract;
 
@@ -53,9 +50,11 @@ public class PlayService extends Service {
     private static final String BIND_ACTION = "ru.mrsmile2114.ytmusic.player.action.bind";
 
     private static final int NOTIFICATION_ID = 112345;
+    private static final String NOTIFICATION_CHANNEL_ID = "ytmusic_channel_playback";
 
 
-    private Notification status;
+    private Notification mNotification;
+    private NotificationChannel mChannel;
     private CallBack mCallBack;
     private MyBinder mLocalBinder = new MyBinder();
     private MediaPlayer mediaPlayer;
@@ -66,6 +65,7 @@ public class PlayService extends Service {
     public boolean isPaused;
     public int isRepeat = 0;
     public boolean isShuffle;
+    private boolean isNotify;
     private final Handler handler = new Handler();
     private SeekBar mSeekBar;
 
@@ -131,6 +131,11 @@ public class PlayService extends Service {
                         }
                     });
                     return true;
+                } else if (what==-38){
+                    //isPaused=false;
+                    //isNotify=false;
+                    //stopForeground(true);
+                    return true;
                 }
                 return false;
             }
@@ -162,8 +167,7 @@ public class PlayService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.e("Error","onDestroy");
-        System.out.println("DESTROYYYYYYYY");
+        Log.d("PlayService","onDestroy");
         super.onDestroy();
         removeNotification();
         mediaPlayer.release();
@@ -206,10 +210,10 @@ public class PlayService extends Service {
 
     private void initNotification(){
         // Using RemoteViews to bind custom layouts into Notification
-        views = new RemoteViews(getPackageName(), R.layout.status_bar);
         bigViews = new RemoteViews(getPackageName(), R.layout.status_bar_expanded);
-        views.setViewVisibility(R.id.status_bar_icon, View.VISIBLE);
-        views.setViewVisibility(R.id.status_bar_album_art, View.GONE);
+        views = new RemoteViews(getPackageName(), R.layout.status_bar);
+        //views.setViewVisibility(R.id.status_bar_icon, View.VISIBLE);
+        //views.setViewVisibility(R.id.status_bar_album_art, View.GONE);
         //Play:
         Intent playIntent = new Intent(this, PlayService.class);
         playIntent.setAction(ACTION_PLAY);
@@ -237,28 +241,41 @@ public class PlayService extends Service {
         PendingIntent pCloseIntent = PendingIntent.getService(this, 0,
                 closeIntent, 0);
         bigViews.setOnClickPendingIntent(R.id.status_bar_collapse,pCloseIntent);
-        views.setOnClickPendingIntent(R.id.status_bar_collapse,pCloseIntent);
+        //views.setOnClickPendingIntent(R.id.status_bar_collapse,pCloseIntent);
 
-        status = new Notification.Builder(this)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .build();
-        status.contentView = views;
-        status.bigContentView = bigViews;
-        status.flags |= Notification.FLAG_ONGOING_EVENT;
-        //status.flags |= Notification.FLAG_FOREGROUND_SERVICE;
-        //status.contentIntent = pendingIntent;
+        NotificationManager mgr = (NotificationManager) getApplicationContext()
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID,getResources().getString(R.string.channel_name),NotificationManager.IMPORTANCE_LOW);
+            mChannel.setShowBadge(false);
+            mChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            mChannel.setDescription(getResources().getString(R.string.channel_description));
+            mgr.createNotificationChannel(mChannel);
+        }
+        NotificationCompat.Builder mNotificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
+        mNotificationBuilder.setSmallIcon(R.drawable.ic_menu_play);
+        mNotificationBuilder.setCustomContentView(views);
+        mNotificationBuilder.setCustomBigContentView(bigViews);
+        mNotificationBuilder.setOngoing(true);
+        mNotification=mNotificationBuilder.build();
+        //mNotification.contentIntent = pendingIntent;
     }
 
     public void updateNotification(){
         NotificationManager mgr = (NotificationManager) getApplicationContext()
                 .getSystemService(Context.NOTIFICATION_SERVICE);
-        mgr.notify(NOTIFICATION_ID,status);
+        if (!isNotify){
+            startForeground(NOTIFICATION_ID, mNotification);
+            isNotify=true;
+        } else {
+            mgr.notify(NOTIFICATION_ID, mNotification);
+        }
     }
 
     public void removeNotification(){
         NotificationManager mgr = (NotificationManager) getApplicationContext()
                 .getSystemService(Context.NOTIFICATION_SERVICE);
-        mgr.cancel(NOTIFICATION_ID);
+        //mgr.cancel(NOTIFICATION_ID);
         //if (mediaPlayer.isPlaying()){
             mediaPlayer.stop();
         //}
@@ -268,8 +285,11 @@ public class PlayService extends Service {
             item.setPlaying(false);
         }
         if (mCallBack!=null){
+            mCallBack.PressPlay(false);
             mCallBack.UpdateQueue();
         }
+        isNotify=false;
+        stopForeground(true);
     }
 
     private void PlayBackMusic(){
@@ -285,7 +305,13 @@ public class PlayService extends Service {
                     mediaPlayer.setDataSource(item.getParsedUrl());
                     bigViews.setTextViewText(R.id.status_bar_track_name,item.getTitle());
                     views.setTextViewText(R.id.status_bar_track_name,item.getTitle());
-                    status.tickerText=item.getTitle();
+                    Picasso.get().load(item.getThumbnail()).into(bigViews,
+                            R.id.status_bar_album_art,NOTIFICATION_ID,
+                            mNotification);
+                    Picasso.get().load(item.getThumbnail()).into(views,
+                            R.id.status_bar_album_art,NOTIFICATION_ID,
+                            mNotification);
+                    mNotification.tickerText=item.getTitle();
                     updateNotification();
                     mediaPlayer.prepareAsync();
                 } else {
@@ -451,7 +477,8 @@ public class PlayService extends Service {
             for(int i=0;i<response.getItems().size();i++) {
                 QueueItems.QueueItem item = new QueueItems.QueueItem(
                         response.getItems().get(i).getSnippet().getTitle(),
-                        response.getItems().get(i).getContentDetails().getVideoId());
+                        response.getItems().get(i).getContentDetails().getVideoId(),
+                        response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl());
                 QueueItems.addItem(item);
                 new YTExtract(getContext(), item.getUrl(),1,6,mExtractCallBackInterface)
                         .execute(item.getUrl());

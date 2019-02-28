@@ -13,5 +13,5 @@
     <dimen name="status_bar_button_info_container_padding_left">11dp</dimen>
     <dimen name="notification_expanded_height">128.0dip</dimen>
     <dimen name="play_controls_notification">48.0dip</dimen>
-    <dimen name="notification_padding">8.0dip</dimen>
+    <dimen name="notification_padding">6.0dip</dimen>
 </resources>

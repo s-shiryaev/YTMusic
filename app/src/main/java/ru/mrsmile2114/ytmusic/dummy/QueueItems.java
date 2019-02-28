@@ -136,13 +136,15 @@ public class QueueItems {
         private boolean isPlaying;
         private boolean isExtracting;
         private String parsedUrl;
+        private String thumbnail;
 
-        public QueueItem(String title, String url) {
+        public QueueItem(String title, String url, String thumbnail) {
             this.title = title;
             this.url = url;
             this.isPlaying=false;
             this.isExtracting=true;
             this.parsedUrl="";
+            this.thumbnail = thumbnail;
         }
 
         public String getTitle() {return title;}
@@ -150,6 +152,7 @@ public class QueueItems {
         public boolean isPlaying() {return isPlaying;}
         public boolean isExtracting() {return isExtracting;}
         public String getParsedUrl() {return parsedUrl;}
+        public String getThumbnail() {return thumbnail;}
 
         public void setPlaying(boolean playing) {isPlaying = playing;}
 

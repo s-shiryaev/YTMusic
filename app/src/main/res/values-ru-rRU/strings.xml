@@ -23,4 +23,6 @@
     <string name="player_connection_error">YTMusic: Ошибка. Проверьте подключение к интернету.</string>
     <string name="player_datasource_error">YTMusic: Ошибка. Попытка получить новую ссылку ...</string>
     <string name="press_back">Нажмите еще раз для выхода</string>
+    <string name="channel_name">Воспроизведение</string>
+    <string name="channel_description">Управления воспроизведением</string>
 </resources>

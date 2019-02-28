@@ -6,12 +6,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -94,9 +96,14 @@ public class PlayFragment extends Fragment implements
                 .setApplicationName(getString(R.string.app_name))
                 .build();
 
-        Intent serviceIntent = new Intent(getContext(), PlayService.class);
+        Intent serviceIntent = new Intent(getActivity().getApplicationContext(), PlayService.class);
         serviceIntent.setAction("ru.mrsmile2114.ytmusic.player.action.init");
         //getActivity().startService(serviceIntent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ContextCompat.startForegroundService(getActivity().getApplicationContext(),serviceIntent);
+        } else {
+            getActivity().getApplicationContext().startService(serviceIntent);
+        }
         getActivity().bindService(serviceIntent, this,Context.BIND_AUTO_CREATE);
         setRetainInstance(true);
     }
@@ -193,7 +200,9 @@ public class PlayFragment extends Fragment implements
         super.onDestroy();
         Intent serviceIntent = new Intent(getContext(), PlayService.class);
         serviceIntent.setAction("ru.mrsmile2114.ytmusic.player.action.close");
-        getActivity().stopService(serviceIntent);
+        //getActivity().stopService(serviceIntent);
+        getActivity().unbindService(this);
+        getActivity().getApplicationContext().stopService(serviceIntent);
     }
 
     @Override
@@ -328,7 +337,8 @@ public class PlayFragment extends Fragment implements
             mListener.SetMainProgressDialogVisible(false);
             QueueItems.QueueItem item = new QueueItems.QueueItem(
                     response.getItems().get(0).getSnippet().getTitle(),
-                    response.getItems().get(0).getId());
+                    response.getItems().get(0).getId(),
+                    response.getItems().get(0).getSnippet().getThumbnails().getMedium().getUrl());
             QueueItems.addItem(item);
             UpdateQueue();
             new YTExtract(getActivity(),item.getUrl(), 1, 6, mExtractCallBackInterface)
@@ -395,7 +405,8 @@ public class PlayFragment extends Fragment implements
             for(int i=0;i<response.getItems().size();i++) {
                 QueueItems.QueueItem item = new QueueItems.QueueItem(
                         response.getItems().get(i).getSnippet().getTitle(),
-                        response.getItems().get(i).getContentDetails().getVideoId());
+                        response.getItems().get(i).getContentDetails().getVideoId(),
+                        response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl());
                 QueueItems.addItem(item);
                 new YTExtract(getActivity(), item.getUrl(),1,6,mExtractCallBackInterface)
                         .execute(item.getUrl());
