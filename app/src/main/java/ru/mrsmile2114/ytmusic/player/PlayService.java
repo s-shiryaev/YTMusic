@@ -10,6 +10,7 @@ import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -27,15 +28,14 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
 import ru.mrsmile2114.ytmusic.R;
 import ru.mrsmile2114.ytmusic.dummy.QueueItems;
-import ru.mrsmile2114.ytmusic.utils.GetPlaylistItemsAsyncTask;
 import ru.mrsmile2114.ytmusic.utils.InternetCheck;
+import ru.mrsmile2114.ytmusic.utils.PageCheck;
 import ru.mrsmile2114.ytmusic.utils.YTExtract;
 
 
@@ -66,6 +66,7 @@ public class PlayService extends Service {
     public int isRepeat = 0;
     public boolean isShuffle;
     private boolean isNotify;
+    private boolean waitExtract;
     private final Handler handler = new Handler();
     private SeekBar mSeekBar;
 
@@ -212,8 +213,6 @@ public class PlayService extends Service {
         // Using RemoteViews to bind custom layouts into Notification
         bigViews = new RemoteViews(getPackageName(), R.layout.status_bar_expanded);
         views = new RemoteViews(getPackageName(), R.layout.status_bar);
-        //views.setViewVisibility(R.id.status_bar_icon, View.VISIBLE);
-        //views.setViewVisibility(R.id.status_bar_album_art, View.GONE);
         //Play:
         Intent playIntent = new Intent(this, PlayService.class);
         playIntent.setAction(ACTION_PLAY);
@@ -241,7 +240,6 @@ public class PlayService extends Service {
         PendingIntent pCloseIntent = PendingIntent.getService(this, 0,
                 closeIntent, 0);
         bigViews.setOnClickPendingIntent(R.id.status_bar_collapse,pCloseIntent);
-        //views.setOnClickPendingIntent(R.id.status_bar_collapse,pCloseIntent);
 
         NotificationManager mgr = (NotificationManager) getApplicationContext()
                 .getSystemService(Context.NOTIFICATION_SERVICE);
@@ -258,7 +256,6 @@ public class PlayService extends Service {
         mNotificationBuilder.setCustomBigContentView(bigViews);
         mNotificationBuilder.setOngoing(true);
         mNotification=mNotificationBuilder.build();
-        //mNotification.contentIntent = pendingIntent;
     }
 
     public void updateNotification(){
@@ -280,6 +277,7 @@ public class PlayService extends Service {
             mediaPlayer.stop();
         //}
         isPaused=false;
+        waitExtract=false;
         QueueItems.QueueItem item = QueueItems.getPlayingItem();
         if (item!=null){
             item.setPlaying(false);
@@ -301,8 +299,7 @@ public class PlayService extends Service {
             } else {
                 QueueItems.QueueItem item = QueueItems.getPlayingItem();
                 if (item!=null){
-                    mediaPlayer.reset();
-                    mediaPlayer.setDataSource(item.getParsedUrl());
+                    initNotification();//needs for prevent RemoteViews cache overflow
                     bigViews.setTextViewText(R.id.status_bar_track_name,item.getTitle());
                     views.setTextViewText(R.id.status_bar_track_name,item.getTitle());
                     Picasso.get().load(item.getThumbnail()).into(bigViews,
@@ -313,7 +310,7 @@ public class PlayService extends Service {
                             mNotification);
                     mNotification.tickerText=item.getTitle();
                     updateNotification();
-                    mediaPlayer.prepareAsync();
+                    prepareMediaPlayer(item);
                 } else {
                     pressPlay(false);
                     removeNotification();
@@ -326,8 +323,43 @@ public class PlayService extends Service {
         }
     }
 
+    private void prepareMediaPlayer(final QueueItems.QueueItem item){
+        new InternetCheck(new InternetCheck.Consumer() {//check internet connection
+            @Override
+            public void accept(Boolean internet) {
+                if(internet){
+                    new PageCheck(new PageCheck.Consumer() {//check file for accessibility
+                        @Override
+                        public void accept(Integer code) {
+                            if (code==200){
+                                try {
+                                    mediaPlayer.reset();
+                                    mediaPlayer.setDataSource(item.getParsedUrl());
+                                    mediaPlayer.prepareAsync();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }else{
+                                Toast.makeText(getApplicationContext(),R.string.player_datasource_error,Toast.LENGTH_LONG)
+                                        .show();
+                                waitExtract=true;//start playing file after get url (if the user still stayed on this file)
+                                item.setExtracting(true);
+                                new YTExtract(getContext(), item.getUrl(),1,9,mExtractCallBackInterface)
+                                            .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,item.getUrl());
+                                mCallBack.UpdateQueue();
+                            }
+                        }
+                    }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,item.getParsedUrl());
+                }else{
+                    Toast.makeText(getApplicationContext(),R.string.player_connection_error, Toast.LENGTH_LONG)
+                            .show();
+                }
+            }
+        });
+    }
+
     public void Play(){
-        if (QueueItems.getPlayingItem()!=null){
+        if (QueueItems.getPlayingItem()!=null&&!waitExtract){
                     if(!mediaPlayer.isPlaying()){
                         PlayBackMusic();
                     } else {
@@ -340,6 +372,7 @@ public class PlayService extends Service {
     }
     public void Next(){
         isPaused=false;
+        waitExtract=false;
         boolean repeat = false;
         if (isRepeat==2){
             repeat=true;
@@ -355,6 +388,7 @@ public class PlayService extends Service {
 
     public void Prev(){
         isPaused=false;
+        waitExtract=false;
         boolean repeat = false;
         if (isRepeat==2){
             repeat=true;
@@ -416,6 +450,7 @@ public class PlayService extends Service {
     public void QueueItemInteraction(QueueItems.QueueItem item){
         if (!item.isPlaying()&&!item.isExtracting()) {
             isPaused=false;
+            waitExtract=false;
             QueueItems.setNextPlayingItem(item);
             mCallBack.UpdateQueue();
             PlayBackMusic();
@@ -425,6 +460,8 @@ public class PlayService extends Service {
     public void QueueItemRemove(QueueItems.QueueItem item){
         QueueItems.removeQueueItem(item);
         if (item.isPlaying()){
+            isPaused=false;
+            waitExtract=false;
             mediaPlayer.stop();
             pressPlay(false);
             removeNotification();
@@ -451,6 +488,9 @@ public class PlayService extends Service {
                 }
             }
             mCallBack.UpdateQueue();
+            if (waitExtract){
+                prepareMediaPlayer(QueueItems.getPlayingItem());
+            }
         }
 
         @Override
@@ -467,28 +507,6 @@ public class PlayService extends Service {
                 }
             }
             mCallBack.UpdateQueue();
-        }
-    };
-
-    private GetPlaylistItemsAsyncTask.GetPlaylistItemsCallBackInterface mGetPlaylistItemsCallBackInterface
-            = new GetPlaylistItemsAsyncTask.GetPlaylistItemsCallBackInterface() {
-        @Override
-        public void onSuccGetPlaylistItems(PlaylistItemListResponse response) {
-            for(int i=0;i<response.getItems().size();i++) {
-                QueueItems.QueueItem item = new QueueItems.QueueItem(
-                        response.getItems().get(i).getSnippet().getTitle(),
-                        response.getItems().get(i).getContentDetails().getVideoId(),
-                        response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl());
-                QueueItems.addItem(item);
-                new YTExtract(getContext(), item.getUrl(),1,6,mExtractCallBackInterface)
-                        .execute(item.getUrl());
-            }
-            mCallBack.UpdateQueue();
-        }
-
-        @Override
-        public void onUnsuccGetPlaylisItems(String error) {
-
         }
     };
 
