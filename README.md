@@ -1,5 +1,5 @@
 ## YTMusic
-YTMusic it's very simple Android application for listening and downloading music from YouTube. It supports work with playlists and videos.
+YTMusic is very simple Android application for listening and downloading music from YouTube. It supports work with playlists and videos.
 
 I developing it just for personal purposes, in order to gain programming skills on Android and learn how to work with the YouTube API.
 
