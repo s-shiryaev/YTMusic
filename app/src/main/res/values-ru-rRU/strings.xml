@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="nav_header_subtitle">что-то</string>
+    <string name="nav_header_subtitle">музыкальный плеер для YouTube</string>
     <string name="nav_header_desc">Навигация</string>
     <string name="navigation_drawer_open">Открыть панель навигации</string>
     <string name="navigation_drawer_close">Закрыть панель навигации</string>
@@ -14,14 +14,14 @@
     <string name="incorrect_url">Пожалуйста, введите правильную ссылку на плейлист / видео!</string>
     <string name="api_error">"Ошибка API YouTube: "</string>
     <string name="extraction_error">Не удалось получить файл для загрузки, повторите попытку.</string>
-    <string name="please_wait">Пожалуйста, подождите...</string>
+    <string name="please_wait">Пожалуйста, подождите…</string>
     <string name="play_queue">"Очередь воспроизведения: "</string>
     <string name="add">Добавить</string>
     <string name="input_link">Введите ссылку на видео или плейлист:</string>
     <string name="video_not_found">Видео с этим идентификатором не найдено.</string>
     <string name="extraction_error_try_again">Не удалось получить файл для загрузки. (Попытка %d)</string>
     <string name="player_connection_error">YTMusic: Ошибка. Проверьте подключение к интернету.</string>
-    <string name="player_datasource_error">YTMusic: Ошибка. Попытка получить новую ссылку ...</string>
+    <string name="player_datasource_error">YTMusic: Ошибка. Попытка получить новую ссылку…</string>
     <string name="press_back">Нажмите еще раз для выхода</string>
     <string name="channel_name">Воспроизведение</string>
     <string name="channel_description">Управления воспроизведением</string>

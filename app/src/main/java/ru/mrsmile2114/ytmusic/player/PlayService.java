@@ -490,6 +490,7 @@ public class PlayService extends Service {
             mCallBack.UpdateQueue();
             if (waitExtract){
                 prepareMediaPlayer(QueueItems.getPlayingItem());
+                waitExtract=false;
             }
         }
 

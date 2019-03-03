@@ -3,7 +3,7 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title" translatable="false">YTMusic</string>
-    <string name="nav_header_subtitle">something</string>
+    <string name="nav_header_subtitle">music player for YouTube</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
     <string name="action_download">Download</string>
