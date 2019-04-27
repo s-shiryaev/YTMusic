@@ -342,8 +342,8 @@ public class PlayFragment extends Fragment implements
                     response.getItems().get(0).getSnippet().getThumbnails().getMedium().getUrl());
             QueueItems.addItem(item);
             UpdateQueue();
-            new YTExtract(getActivity(),item.getUrl(), 1, 6, mExtractCallBackInterface)
-                    .execute(item.getUrl());
+            new YTExtract(getActivity(),item.getUrl(), mExtractCallBackInterface)
+                    .extract();
         }
 
         @Override
@@ -409,8 +409,8 @@ public class PlayFragment extends Fragment implements
                         response.getItems().get(i).getContentDetails().getVideoId(),
                         response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl());
                 QueueItems.addItem(item);
-                new YTExtract(getActivity(), item.getUrl(),1,6,mExtractCallBackInterface)
-                        .execute(item.getUrl());
+                new YTExtract(getActivity(), item.getUrl(), mExtractCallBackInterface)
+                        .extract();
             }
             UpdateQueue();
         }

@@ -120,8 +120,8 @@ public class PlayService extends Service {
                                 QueueItems.QueueItem item = QueueItems.getPlayingItem();
                                 if (item!=null){
                                     item.setExtracting(true);
-                                    new YTExtract(getContext(), item.getUrl(),1,6,mExtractCallBackInterface)
-                                            .execute(item.getUrl());
+                                    new YTExtract(getContext(), item.getUrl(),mExtractCallBackInterface)
+                                            .extract_now();
                                     Next();
                                     mCallBack.UpdateQueue();
                                 }
@@ -344,8 +344,8 @@ public class PlayService extends Service {
                                         .show();
                                 waitExtract=true;//start playing file after get url (if the user still stayed on this file)
                                 item.setExtracting(true);
-                                new YTExtract(getContext(), item.getUrl(),1,9,mExtractCallBackInterface)
-                                            .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,item.getUrl());
+                                new YTExtract(getContext(), item.getUrl(),mExtractCallBackInterface)
+                                            .extract_now();
                                 mCallBack.UpdateQueue();
                             }
                         }
