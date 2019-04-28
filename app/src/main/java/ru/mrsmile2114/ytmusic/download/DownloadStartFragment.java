@@ -138,9 +138,9 @@ public class DownloadStartFragment extends Fragment {
                 } else {
                     if (mListener.HaveStoragePermission()){
                         mListener.SetMainProgressDialogVisible(true);
-                        new YTExtract(getActivity(),s,
+                        new YTExtract(getActivity(),
                                 ((MainActivity)getActivity()).DownloadExtractCallBackInterface)
-                                .extract();
+                                .extract(s);
                     }
                 }
             }else {

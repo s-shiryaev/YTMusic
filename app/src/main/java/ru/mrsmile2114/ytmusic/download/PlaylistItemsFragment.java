@@ -143,9 +143,9 @@ public class PlaylistItemsFragment extends Fragment {
                 if(!CHECKEDITEMS.isEmpty()){
                     mListener.SetMainProgressDialogVisible(true);
                     for (int i = 0; i < CHECKEDITEMS.size(); i++) {
-                        new YTExtract(getActivity(),CHECKEDITEMS.get(i).getUrl(),
+                        new YTExtract(getActivity(),
                                 ((MainActivity)getActivity()).DownloadExtractCallBackInterface)
-                                .extract();
+                                .extract(CHECKEDITEMS.get(i).getUrl());
                     }
                 }
             }

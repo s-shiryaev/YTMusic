@@ -243,18 +243,15 @@ public class PlayFragment extends Fragment implements
                         s.contains("www.youtube.com/playlist?list=")||
                         s.contains("youtu.be/"))){
                     if (s.contains("www.youtube.com/playlist?list=")){
-                        s=s.copyValueOf(s.toCharArray(),s.indexOf("=")+1,
-                                s.length()-s.indexOf("=")-1);//get playlist id
+                        s=s.substring(s.indexOf("=")+1);
                         mListener.SetMainProgressDialogVisible(true);
                         new GetPlaylistItemsAsyncTask(mYoutubeDataApi,
                                 mGetPlaylistItemsCallBackInterface).execute(s);
                     } else {
                         if(s.contains("youtube.com/watch?v=")){
-                            s=s.copyValueOf(s.toCharArray(),s.indexOf("=")+1,
-                                    s.length()-s.indexOf("=")-1);
+                            s=s.substring(s.indexOf("=")+1);
                         }else {
-                            s=s.copyValueOf(s.toCharArray(),s.lastIndexOf("/")+1,
-                                    s.length()-s.lastIndexOf("/")-1);
+                            s=s.substring(s.indexOf("/")+1);
                         }
                         mListener.SetMainProgressDialogVisible(true);
                         new GetVideoDataAsyncTask(mYoutubeDataApi, mGetVideoDataCallBackInterface)
@@ -342,8 +339,8 @@ public class PlayFragment extends Fragment implements
                     response.getItems().get(0).getSnippet().getThumbnails().getMedium().getUrl());
             QueueItems.addItem(item);
             UpdateQueue();
-            new YTExtract(getActivity(),item.getUrl(), mExtractCallBackInterface)
-                    .extract();
+            new YTExtract(getActivity(), mExtractCallBackInterface)
+                    .extract(item.getUrl());
         }
 
         @Override
@@ -409,8 +406,8 @@ public class PlayFragment extends Fragment implements
                         response.getItems().get(i).getContentDetails().getVideoId(),
                         response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl());
                 QueueItems.addItem(item);
-                new YTExtract(getActivity(), item.getUrl(), mExtractCallBackInterface)
-                        .extract();
+                new YTExtract(getActivity(), mExtractCallBackInterface)
+                        .extract(item.getUrl());
             }
             UpdateQueue();
         }

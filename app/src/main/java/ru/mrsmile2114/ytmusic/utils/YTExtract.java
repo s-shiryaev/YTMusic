@@ -25,10 +25,10 @@ import at.huber.youtubeExtractor.YtFile;
  *             //do something
  *         }</code></pre>
  *<p>...
- *<p>{@code new YTExtract(this, url, mRef).extract()}
+ *<p>{@code new YTExtract(this, mCall).extract(url)}
  *<p>Usage example without callback:
  * <pre>
- * <code>new YTExtract(this, url){
+ * <code>new YTExtract(this){
  *            {@literal @}Override
  *             protected void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta vMeta) {
  *                  int itag = 140; //sound
@@ -37,7 +37,7 @@ import at.huber.youtubeExtractor.YtFile;
  *                      //do something
  *                  }
  *             }
- *          }.extract();</code></pre>
+ *          }.extract(url);</code></pre>
  *
  *
  * @author Sergey Shiryaev
@@ -61,14 +61,12 @@ import at.huber.youtubeExtractor.YtFile;
      *{@link ExtractCallBackInterface}</b></p>
      *
      * @param con       The context where the link will be extracted.
-     * @param videoUrl  Youtube video URL. Works with mobile links too.
      * @param callBack  Instance of callback ({@link ExtractCallBackInterface})
      */
-    public YTExtract(@NonNull Context con, String videoUrl, ExtractCallBackInterface callBack){
+    public YTExtract(@NonNull Context con, ExtractCallBackInterface callBack){
         super(con);
         this.con=new WeakReference<>(con);
         this.attempt=1;
-        this.videoUrl=videoUrl;
         this.maxAttempts=MAX_ATTEMPTS;
         this.callbackReference=new WeakReference<>(callBack);
     }
@@ -78,61 +76,65 @@ import at.huber.youtubeExtractor.YtFile;
      *<p><b>If you use this constructor, you should override method
      *{@link #onExtractionComplete(SparseArray, VideoMeta)}</b></p>
      *
-     * @param con       The context where the link will be extracted.
-     * @param videoUrl  Youtube video URL. Works with mobile links too.
+     * @param con The context where the link will be extracted.
      **/
-    public YTExtract (@NonNull Context con, String videoUrl){
+    public YTExtract (@NonNull Context con){
         super(con);
         this.con=new WeakReference<>(con);
         this.attempt=1;
-        this.videoUrl=videoUrl;
         this.maxAttempts=MAX_ATTEMPTS;
     }
 
 
-    private YTExtract(@NonNull Context con, String videoUrl, int attempt, int maxAttempts,
+    private YTExtract(@NonNull Context con, int attempt, int maxAttempts,
                      ExtractCallBackInterface callBack) {
         super(con);
         this.con=new WeakReference<>(con);
         this.attempt=attempt;
-        this.videoUrl=videoUrl;
         this.maxAttempts=maxAttempts;
         this.callbackReference=new WeakReference<>(callBack);
     }
 
-    private YTExtract(@NonNull Context con, String videoUrl, int attempt, int maxAttempts) {
+    private YTExtract(@NonNull Context con, int attempt, int maxAttempts) {
         super(con);
         this.con=new WeakReference<>(con);
         this.attempt=attempt;
-        this.videoUrl=videoUrl;
         this.maxAttempts=maxAttempts;
     }
 
     /**
      * Standard extract method with default parameters.
+     * All tasks caused by this method are executed in the same thread successively.
      *
+     * @param videoUrl  Youtube video URL. Works with mobile links too.
      */
-    public void extract() {
+    public void extract(String videoUrl) {
+        this.videoUrl = videoUrl;
         super.extract(videoUrl, false, true);
     }
 
     /**
-     * <p>Same as {@link #extract()} but this method works in a separate thread.
-     * <p>Use it only if you need to extract the link as quickly as possible.
-     * In the other case, {@link #extract()} is preferable.
+     * <p>Same as {@link #extract(String videoUrl)} but the tasks caused by this method
+     * will be executed in parallel.
+     * <p>Use it if you need to extract the link as quickly as possible.
+     * <p>All tasks caused by this method will be executed in parallel in separate threads,
+     * if possible. However, there is a limit on the maximum number of threads. If the limit
+     * is reached, task queues will be created for each thread.
      *
+     * @param videoUrl  Youtube video URL. Works with mobile links too.
      */
-    public void extract_now() {
+    public void extract_now(String videoUrl) {
         ((YouTubeExtractor) this).setIncludeWebM(true);
         ((YouTubeExtractor) this).setParseDashManifest(false);
+        this.videoUrl=videoUrl;
         this.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, videoUrl);
     }
 
     /**
-     * <p>Same as {@link #extract(boolean, boolean)} but this method works in a separate thread.
-     * <p>Use it only if you need to extract the link as quickly as possible.
-     * In the other case, {@link #extract(boolean, boolean)} is preferable.
+     * Standard extract method with custom parameters.
+     * All tasks caused by this method are executed in the same thread successively.
      *
+     * @param videoUrl          Youtube video URL. Works with mobile links too.
      * @param parseDashManifest The dash manifest contains dash streams and usually additionally
      *                          the higher quality audio formats. But the main difference is that
      *                          dash streams from the dash manifest seem to not get throttled by
@@ -142,16 +144,21 @@ import at.huber.youtubeExtractor.YtFile;
      * @param includeWebM       If set to false it excludes the webm container format streams
      *                          from the result.
      */
-    public void extract(boolean parseDashManifest, boolean includeWebM) {
+    public void extract(String videoUrl, boolean parseDashManifest, boolean includeWebM) {
         this.parseDashManifest = parseDashManifest;
         this.includeWebM = includeWebM;
+        this.videoUrl=videoUrl;
         super.extract(videoUrl, parseDashManifest, includeWebM);
     }
 
     /**
-     * <p>This extract method works in a separate thread.
-     * <p>Use it if you need to extract the link right now.
+     * <p>Same as {@link #extract(String videoUrl, boolean, boolean)}but the tasks caused by
+     * this method will be executed in parallel.
+     * <p>All tasks caused by this method will be executed in parallel in separate threads,
+     * if possible. However, there is a limit on the maximum number of threads. If the limit
+     * is reached, task queues will be created for each thread.
      *
+     * @param videoUrl          Youtube video URL. Works with mobile links too.
      * @param parseDashManifest The dash manifest contains dash streams and usually additionally
      *                          the higher quality audio formats. But the main difference is that
      *                          dash streams from the dash manifest seem to not get throttled by
@@ -161,9 +168,12 @@ import at.huber.youtubeExtractor.YtFile;
      * @param includeWebM       If set to false it excludes the webm container format streams
      *                          from the result.
      */
-    public void extract_now(boolean includeWebM, boolean parseDashManifest){
+    public void extract_now(String videoUrl, boolean includeWebM, boolean parseDashManifest){
         ((YouTubeExtractor) this).setIncludeWebM(includeWebM);
         ((YouTubeExtractor) this).setParseDashManifest(parseDashManifest);
+        this.parseDashManifest = parseDashManifest;
+        this.includeWebM = includeWebM;
+        this.videoUrl=videoUrl;
         this.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, videoUrl);
     }
 
@@ -181,12 +191,12 @@ import at.huber.youtubeExtractor.YtFile;
             }
             if (attempt<maxAttempts){
                 if (callbackReference != null) {
-                    new YTExtract(con.get(), videoUrl, attempt + 1, maxAttempts,
+                    new YTExtract(con.get(), attempt + 1, maxAttempts,
                             callbackReference.get())
-                            .extract(parseDashManifest, includeWebM);
+                            .extract_now(videoUrl, parseDashManifest, includeWebM);
                 } else {
-                    new YTExtract(con.get(), videoUrl, attempt + 1, maxAttempts)
-                            .extract(parseDashManifest, includeWebM);
+                    new YTExtract(con.get(), attempt + 1, maxAttempts)
+                            .extract_now(videoUrl, parseDashManifest, includeWebM);
                 }
             } else {
                 if (callbackReference != null) {
