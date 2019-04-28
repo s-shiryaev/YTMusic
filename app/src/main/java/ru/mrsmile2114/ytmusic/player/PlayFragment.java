@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -90,6 +91,7 @@ public class PlayFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SendIntentActivity.updateExtractCallBack(mExtractCallBackInterface);
         queueList = new QueueItemFragment();
         mYoutubeDataApi = new YouTube.Builder(mTransport, mJsonFactory, null)
                 .setApplicationName(getString(R.string.app_name))
@@ -243,8 +245,8 @@ public class PlayFragment extends Fragment implements
                     if (s.contains("www.youtube.com/playlist?list=")){
                         s=s.substring(s.indexOf("=")+1);
                         mListener.SetMainProgressDialogVisible(true);
-                        new GetPlaylistItemsAsyncTask(mYoutubeDataApi,
-                                mGetPlaylistItemsCallBack).execute(s);
+                        new GetPlaylistItemsAsyncTask(mYoutubeDataApi, mGetPlaylistItemsCallBack)
+                                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, s);
                     } else {
                         if(s.contains("youtube.com/watch?v=")){
                             s=s.substring(s.indexOf("=")+1);
@@ -253,7 +255,7 @@ public class PlayFragment extends Fragment implements
                         }
                         mListener.SetMainProgressDialogVisible(true);
                         new GetVideoDataAsyncTask(mYoutubeDataApi, mGetVideoDataCallBackInterface)
-                                .execute(s);
+                                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, s);
                     }
 
                 }else {

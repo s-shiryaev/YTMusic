@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -16,9 +16,22 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".player.SendIntentActivity"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/AppTheme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
         <service
             android:name=".player.PlayService"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
@@ -27,7 +40,6 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

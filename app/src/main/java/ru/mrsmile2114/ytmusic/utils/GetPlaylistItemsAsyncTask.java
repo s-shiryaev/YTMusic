@@ -63,7 +63,9 @@ public class GetPlaylistItemsAsyncTask extends AsyncTask<String, Void, PlaylistI
                         .execute();
             }
             if (playlistItemListResponse.getNextPageToken()!=null){
-                new GetPlaylistItemsAsyncTask(mYouTubeDataApiRef.get(),callbackReference.get(),playlistItemListResponse.getNextPageToken()).execute(playlistId);
+                new GetPlaylistItemsAsyncTask(mYouTubeDataApiRef.get(),callbackReference.get(),
+                        playlistItemListResponse.getNextPageToken())
+                        .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, playlistId);
             }
 
         } catch (IOException exc) {

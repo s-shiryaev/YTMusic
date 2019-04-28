@@ -33,6 +33,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CheckBox;
 
+import ru.mrsmile2114.ytmusic.player.SendIntentActivity;
 import ru.mrsmile2114.ytmusic.utils.DownloadFinishedReceiver;
 import ru.mrsmile2114.ytmusic.download.DownloadStartFragment;
 import ru.mrsmile2114.ytmusic.download.DownloadsFragment;
@@ -69,11 +70,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SendIntentActivity.updateActivity(this);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         StartContentObserver();
-
         fab = (FloatingActionButton) findViewById(R.id.fab);
         SetMainFabVisible(false);
 
@@ -117,6 +118,7 @@ public class MainActivity extends AppCompatActivity
             transaction.commit();
         }
         navigationView.setCheckedItem(R.id.nav_play);
+
     }
 
     @Override
