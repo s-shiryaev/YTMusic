@@ -145,7 +145,7 @@ public class PlaylistItemsFragment extends Fragment {
                     for (int i = 0; i < CHECKEDITEMS.size(); i++) {
                         new YTExtract(getActivity(),
                                 ((MainActivity)getActivity()).DownloadExtractCallBackInterface)
-                                .extract(CHECKEDITEMS.get(i).getUrl());
+                                .extract(CHECKEDITEMS.get(i).getUrl(),140);
                     }
                 }
             }

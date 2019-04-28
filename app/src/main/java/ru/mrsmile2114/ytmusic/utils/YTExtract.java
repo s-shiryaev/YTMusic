@@ -17,28 +17,16 @@ import at.huber.youtubeExtractor.YtFile;
  *<p>Child class of {@link at.huber.youtubeExtractor.YouTubeExtractor}.
  *<p>Implements attempts to get a link after a failure and can work with callbacks.
  *<p>
- *<p>Usage example with callback:
+ *<p>Usage example:
  *<pre>
  *<code>private ExtractCallBackInterface mCall = new ExtractCallBackInterface() {
  *         {@literal @}Override
  *         public void onSuccExtract(String url, String parsedUrl, String title) {
  *             //do something
- *         }</code></pre>
+ *         }
+ *         ...</code></pre>
  *<p>...
- *<p>{@code new YTExtract(this, mCall).extract(url)}
- *<p>Usage example without callback:
- * <pre>
- * <code>new YTExtract(this){
- *            {@literal @}Override
- *             protected void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta vMeta) {
- *                  int itag = 140; //sound
- *                  if (ytFiles!=null){
- *                      String parsedUrl = ytFiles.get(itag).getUrl();
- *                      //do something
- *                  }
- *             }
- *          }.extract(url);</code></pre>
- *
+ *<p>{@code new YTExtract(this, mCall).extract(url, itags)}
  *
  * @author Sergey Shiryaev
  **/
@@ -53,6 +41,7 @@ import at.huber.youtubeExtractor.YtFile;
     private WeakReference<ExtractCallBackInterface> callbackReference;
     private boolean parseDashManifest;
     private boolean includeWebM;
+    private int[] itags;
 
     /**
      *<p>Standard {@link YTExtract} constructor. Use it if you do not want to override method
@@ -75,6 +64,9 @@ import at.huber.youtubeExtractor.YtFile;
      *<p>Standard {@link YTExtract} constructor.</p>
      *<p><b>If you use this constructor, you should override method
      *{@link #onExtractionComplete(SparseArray, VideoMeta)}</b></p>
+     *
+     * @deprecated It is not recommended to use, because non-static AsyncTask classes can
+     * cause memory leaks. Use {@link #YTExtract(Context, ExtractCallBackInterface)}
      *
      * @param con The context where the link will be extracted.
      **/
@@ -107,31 +99,44 @@ import at.huber.youtubeExtractor.YtFile;
      * All tasks caused by this method are executed in the same thread successively.
      *
      * @param videoUrl  Youtube video URL. Works with mobile links too.
+     * @param itags     YouTube video stream format codes. E.g.  video 720p mp4  - 22,
+     *                  audio 128k - 140. See all formats
+     *                  <a href="https://gist.github.com/sidneys/7095afe4da4ae58694d128b1034e01e2">
+     *                  here</a>.You can get several versions of a file at once (a callback
+     *                  will be called for each one) like this: {@code 140, 141, 22}
      */
-    public void extract(String videoUrl) {
+    public void extract(String videoUrl, int... itags) {
         this.videoUrl = videoUrl;
+        this.itags = itags;
         super.extract(videoUrl, false, true);
     }
 
     /**
-     * <p>Same as {@link #extract(String videoUrl)} but the tasks caused by this method
-     * will be executed in parallel.
+     * <p>Same as {@link #extract(String videoUrl, int... itags)} but the tasks caused
+     * by this method will be executed in parallel.
      * <p>Use it if you need to extract the link as quickly as possible.
      * <p>All tasks caused by this method will be executed in parallel in separate threads,
      * if possible. However, there is a limit on the maximum number of threads. If the limit
      * is reached, task queues will be created for each thread.
      *
      * @param videoUrl  Youtube video URL. Works with mobile links too.
+     * @param itags     YouTube video stream format codes. E.g.  video 720p mp4  - 22,
+     *                  audio 128k - 140. See all formats
+     *                  <a href="https://gist.github.com/sidneys/7095afe4da4ae58694d128b1034e01e2">
+     *                  here</a>.You can get several versions of a file at once (a callback
+     *                  will be called for each one) like this: {@code 140, 141, 22}
      */
-    public void extract_now(String videoUrl) {
+    public void extract_now(String videoUrl, int... itags) {
         ((YouTubeExtractor) this).setIncludeWebM(true);
         ((YouTubeExtractor) this).setParseDashManifest(false);
         this.videoUrl=videoUrl;
+        this.itags = itags;
         this.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, videoUrl);
     }
 
     /**
-     * Standard extract method with custom parameters.
+     * Standard extract method with custom parameters. The link to the audio file will be extracted.
+     *
      * All tasks caused by this method are executed in the same thread successively.
      *
      * @param videoUrl          Youtube video URL. Works with mobile links too.
@@ -143,17 +148,24 @@ import at.huber.youtubeExtractor.YtFile;
      *                          extraction.
      * @param includeWebM       If set to false it excludes the webm container format streams
      *                          from the result.
+     * @param itags     YouTube video stream format codes. E.g.  video 720p mp4  - 22,
+     *                  audio 128k - 140. See all formats
+     *                  <a href="https://gist.github.com/sidneys/7095afe4da4ae58694d128b1034e01e2">
+     *                  here</a>.You can get several versions of a file at once (a callback
+     *                  will be called for each one) like this: {@code 140, 141, 22}
      */
-    public void extract(String videoUrl, boolean parseDashManifest, boolean includeWebM) {
+    public void extract(String videoUrl, boolean parseDashManifest, boolean includeWebM,
+                        int... itags) {
         this.parseDashManifest = parseDashManifest;
         this.includeWebM = includeWebM;
         this.videoUrl=videoUrl;
+        this.itags=itags;
         super.extract(videoUrl, parseDashManifest, includeWebM);
     }
 
     /**
      * <p>Same as {@link #extract(String videoUrl, boolean, boolean)}but the tasks caused by
-     * this method will be executed in parallel.
+     * this method will be executed in parallel. The link to the audio file will be extracted.
      * <p>All tasks caused by this method will be executed in parallel in separate threads,
      * if possible. However, there is a limit on the maximum number of threads. If the limit
      * is reached, task queues will be created for each thread.
@@ -167,23 +179,31 @@ import at.huber.youtubeExtractor.YtFile;
      *                          extraction.
      * @param includeWebM       If set to false it excludes the webm container format streams
      *                          from the result.
+     * @param itags     YouTube video stream format codes. E.g.  video 720p mp4  - 22,
+     *                  audio 128k - 140. See all formats
+     *                  <a href="https://gist.github.com/sidneys/7095afe4da4ae58694d128b1034e01e2">
+     *                  here</a>.You can get several versions of a file at once (a callback
+     *                  will be called for each one) like this: {@code 140, 141, 22}
      */
-    public void extract_now(String videoUrl, boolean includeWebM, boolean parseDashManifest){
+    public void extract_now(String videoUrl, boolean includeWebM,
+                            boolean parseDashManifest, int... itags){
         ((YouTubeExtractor) this).setIncludeWebM(includeWebM);
         ((YouTubeExtractor) this).setParseDashManifest(parseDashManifest);
         this.parseDashManifest = parseDashManifest;
         this.includeWebM = includeWebM;
         this.videoUrl=videoUrl;
+        this.itags=itags;
         this.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, videoUrl);
     }
 
     @Override
     protected void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta vMeta) {
-        int itag = 140;
         if (ytFiles!=null){
-            String parsedUrl = ytFiles.get(itag).getUrl();
-            if (callbackReference != null) {
-                callbackReference.get().onSuccExtract(videoUrl,parsedUrl,vMeta.getTitle());
+            for(int i=0;i<itags.length;i++){
+                String parsedUrl = ytFiles.get(itags[i]).getUrl();
+                if (callbackReference != null) {
+                    callbackReference.get().onSuccExtract(videoUrl,parsedUrl,vMeta.getTitle());
+                }
             }
         } else {
             if (callbackReference != null) {
@@ -193,10 +213,10 @@ import at.huber.youtubeExtractor.YtFile;
                 if (callbackReference != null) {
                     new YTExtract(con.get(), attempt + 1, maxAttempts,
                             callbackReference.get())
-                            .extract_now(videoUrl, parseDashManifest, includeWebM);
+                            .extract_now(videoUrl, parseDashManifest, includeWebM, itags);
                 } else {
                     new YTExtract(con.get(), attempt + 1, maxAttempts)
-                            .extract_now(videoUrl, parseDashManifest, includeWebM);
+                            .extract_now(videoUrl, parseDashManifest, includeWebM, itags);
                 }
             } else {
                 if (callbackReference != null) {
@@ -206,9 +226,30 @@ import at.huber.youtubeExtractor.YtFile;
         }
     }
 
+    /**
+     *  A callback interface whose methods are called depending on the result of
+     *  extracting the link.
+     */
     public interface ExtractCallBackInterface {
+        /**
+         * Called when the link is successfully extracted.
+         * @param url       Original video URL.
+         * @param parsedUrl URL to the file that we extracted.
+         * @param title     Video title.
+         */
         void onSuccExtract(String url, String parsedUrl, String title);
+
+        /**
+         * Called if an error occurred while receiving a link and an attempt is made
+         * to extract the link again.
+         * @param attempt   Attempt number
+         */
         void onUnsuccExtractTryAgain(int attempt);
+
+        /**
+         * Called if all attempts to extract the link were unsuccessful.
+         * @param url   Original video URL.
+         */
         void onUnsuccExtract(String url);
     }
 }

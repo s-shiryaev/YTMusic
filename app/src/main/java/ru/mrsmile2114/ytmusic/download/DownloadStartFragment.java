@@ -140,7 +140,7 @@ public class DownloadStartFragment extends Fragment {
                         mListener.SetMainProgressDialogVisible(true);
                         new YTExtract(getActivity(),
                                 ((MainActivity)getActivity()).DownloadExtractCallBackInterface)
-                                .extract(s);
+                                .extract(s,140);
                     }
                 }
             }else {

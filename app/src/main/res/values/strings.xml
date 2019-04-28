@@ -27,5 +27,6 @@
     <string name="press_back">Please click BACK again to exit</string>
     <string name="channel_name">Playback</string>
     <string name="channel_description">Playback controls</string>
+    <string name="title_activity_share" translatable="false">ShareActivity</string>
 
 </resources>

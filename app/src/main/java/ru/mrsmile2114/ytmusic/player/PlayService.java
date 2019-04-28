@@ -121,7 +121,7 @@ public class PlayService extends Service {
                                 if (item!=null){
                                     item.setExtracting(true);
                                     new YTExtract(getContext(),mExtractCallBackInterface)
-                                            .extract_now(item.getUrl());
+                                            .extract_now(item.getUrl(),140);
                                     Next();
                                     mCallBack.UpdateQueue();
                                 }
@@ -345,7 +345,7 @@ public class PlayService extends Service {
                                 waitExtract=true;//start playing file after get url (if the user still stayed on this file)
                                 item.setExtracting(true);
                                 new YTExtract(getContext(),mExtractCallBackInterface)
-                                            .extract_now(item.getUrl());
+                                            .extract_now(item.getUrl(),140);
                                 mCallBack.UpdateQueue();
                             }
                         }

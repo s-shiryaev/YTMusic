@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,7 +15,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -246,7 +244,7 @@ public class PlayFragment extends Fragment implements
                         s=s.substring(s.indexOf("=")+1);
                         mListener.SetMainProgressDialogVisible(true);
                         new GetPlaylistItemsAsyncTask(mYoutubeDataApi,
-                                mGetPlaylistItemsCallBackInterface).execute(s);
+                                mGetPlaylistItemsCallBack).execute(s);
                     } else {
                         if(s.contains("youtube.com/watch?v=")){
                             s=s.substring(s.indexOf("=")+1);
@@ -340,7 +338,7 @@ public class PlayFragment extends Fragment implements
             QueueItems.addItem(item);
             UpdateQueue();
             new YTExtract(getActivity(), mExtractCallBackInterface)
-                    .extract(item.getUrl());
+                    .extract(item.getUrl(),140);
         }
 
         @Override
@@ -395,7 +393,7 @@ public class PlayFragment extends Fragment implements
         }
     };
 
-    private GetPlaylistItemsAsyncTask.GetPlaylistItemsCallBackInterface mGetPlaylistItemsCallBackInterface
+    private GetPlaylistItemsAsyncTask.GetPlaylistItemsCallBackInterface mGetPlaylistItemsCallBack
             = new GetPlaylistItemsAsyncTask.GetPlaylistItemsCallBackInterface() {
         @Override
         public void onSuccGetPlaylistItems(PlaylistItemListResponse response) {
@@ -407,7 +405,7 @@ public class PlayFragment extends Fragment implements
                         response.getItems().get(i).getSnippet().getThumbnails().getMedium().getUrl());
                 QueueItems.addItem(item);
                 new YTExtract(getActivity(), mExtractCallBackInterface)
-                        .extract(item.getUrl());
+                        .extract(item.getUrl(),140);
             }
             UpdateQueue();
         }
