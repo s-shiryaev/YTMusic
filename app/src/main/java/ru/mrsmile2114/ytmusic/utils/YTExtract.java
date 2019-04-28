@@ -135,7 +135,7 @@ import at.huber.youtubeExtractor.YtFile;
     }
 
     /**
-     * Standard extract method with custom parameters. The link to the audio file will be extracted.
+     * Standard extract method with custom parameters.
      *
      * All tasks caused by this method are executed in the same thread successively.
      *
@@ -165,7 +165,7 @@ import at.huber.youtubeExtractor.YtFile;
 
     /**
      * <p>Same as {@link #extract(String videoUrl, boolean, boolean)}but the tasks caused by
-     * this method will be executed in parallel. The link to the audio file will be extracted.
+     * this method will be executed in parallel.
      * <p>All tasks caused by this method will be executed in parallel in separate threads,
      * if possible. However, there is a limit on the maximum number of threads. If the limit
      * is reached, task queues will be created for each thread.
